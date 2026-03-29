@@ -8,7 +8,9 @@ def show_menu():
     print("1. 添加学生")
     print("2. 查看所有学生")
     print("3. 按学号查询学生")
-    print("4. 保存并退出")
+    print("4.修改学生信息")
+    print("5.删除学生")
+    print("6. 保存并退出")
 
 
 def add_student_flow(manager):
@@ -28,6 +30,33 @@ def add_student_flow(manager):
         print("添加成功。")
     except Exception as e:
         print("添加失败：", e)
+
+
+def update_student_flow(manager):
+    student_id = input("请输入要修改的学号：").strip()
+    new_name = input("请输入新的姓名：")
+    age_text = input("请输入新的年龄：")
+    new_major = input("请输入新的专业：")
+    score_text = input("请输入新的成绩：")
+
+    try:
+        new_age = int(age_text)
+        new_score = int(score_text)
+    
+        manager.update_student_by_id(student_id,new_name,new_age,new_major,new_score)
+        print("修改成功。")
+    except Exception as e:
+        print("修改异常：",e)
+
+def delete_student_flow(manager):
+    student_id = input("请输入要删除的学号：")
+
+    try:
+        manager.delete_student_by_id(student_id)
+        print("删除成功。")
+    except Exception as e:
+        print("删除失败：",e)
+
 
 
 def list_students_flow(manager):
@@ -72,7 +101,7 @@ def main():
     ##对外输出学生数据个数：
     print(f"已加载 {len(manager.list_students())} 条学生数据。")
 
-    ##按4选项才可退出菜单：
+    ##按6选项才可退出菜单：
     while True:
         ##显示菜单与提示：
         show_menu()
@@ -85,12 +114,16 @@ def main():
         elif choice == "3":
             find_student_flow(manager)   ##根据学号查询学生信息
         elif choice == "4":
+            update_student_flow(manager)   ##根据学号修改学生
+        elif choice == "5":
+            delete_student_flow(manager)    ##根据学号删除学生
+        elif choice == "6":
             ##存储学生信息：
             save_students(file_path, manager.list_students())
             print("数据已保存，程序退出，再见！")
             break
         else:
-            print("输入无效，请输入 1~4 的数字。")
+            print("输入无效，请输入 1~6 的数字。")
 
 
 if __name__ == "__main__":
