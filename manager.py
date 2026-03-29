@@ -15,7 +15,7 @@ class StudentManager:
         self.students.append(student)
 
 
-    ##检查学号是否已经存在
+    ##查询学生的管理器
     def find_student_by_id(self,student_id:str):
         if not isinstance(student_id,str):
             raise TypeError("学号必须是字符串。")
@@ -23,7 +23,7 @@ class StudentManager:
             if student.id == student_id:
                return student
         return None
-
+    ##列出管理器中的学生信息    
     def list_students(self):
         return  self.students.copy()
 if __name__ == "__main__":
