@@ -12,7 +12,6 @@ def format_student(student):
         "------------------------"
     )
 
-
 def show_menu():
     print("\n====== 学生信息管理系统 ======")
     print("1. 添加学生")
@@ -22,26 +21,88 @@ def show_menu():
     print("5. 删除学生")
     print("6. 保存并退出")
 
+def input_menu_choice():    ##菜单输入辅助函数
+    while True:
+        choice = input("请输入你的选择：").strip()
+        if choice in ("1","2","3","4","5","6"):
+            return choice
+        print("输入无效,请输入 1~6 的数字。")
+
+def input_non_empty(prompt):    ##非空输入辅助函数
+    while True:
+        text = input(prompt).strip()
+        if text:
+            return text
+        print("输入不能为空,请重新输入。")
+
+##整数范围输入辅助函数：
+def input_int_in_range(prompt,field_name,min_value=None,max_value=None):
+    while True:
+
+        text = input(prompt).strip()
+
+        try:
+            value = int(text)
+        except ValueError:
+            print(f"{field_name}输入无效,请输入整数。")
+            continue
+        
+        if min_value is not None and value < min_value:
+            print(f"{field_name}不能小于{min_value}。")
+            continue
+
+        if max_value is not None and value > max_value:
+            print(f"{field_name}不能大于{max_value}。")
+            continue
+
+        return value
+
+def input_optional_text(prompt,current_value):   ##可选文本输入辅助函数
+    text = input(prompt).strip()
+    return text if text else current_value
+
+##可选整数范围输入辅助函数：
+def input_optional_int_in_range(prompt,field_name,current_value,min_value=None,max_value=None):
+    while True:
+        text = input(prompt).strip()
+
+        if text == "":
+            return current_value
+
+        try:
+            value = int(text)
+        except ValueError:
+            print(f"{field_name}输入无效,请输入整数,或直接回车保留原值。")
+            continue
+
+        if min_value is not None and value < min_value:
+            print(f"{field_name}不能小于{min_value},或直接回车保留原值。")
+            continue
+
+        if max_value is not None and value > max_value:
+            print(f"{field_name}不能大于{max_value},或直接回车保留原值。")
+            continue
+        return value
+
 
 def add_student_flow(manager):
     print("\n====== 添加学生 ======")
-    stu_id = input("请输入学号：").strip()
-    stu_name = input("请输入姓名：").strip()
-    age_text = input("请输入年龄：").strip()
-    stu_major = input("请输入专业：").strip()
-    score_text = input("请输入成绩：").strip()
+
+    
+    stu_id = input_non_empty("请输入学号：")
+    stu_name = input_non_empty("请输入姓名：")
+    stu_age = input_int_in_range("请输入年龄:","年龄",0)
+    stu_major = input_non_empty("请输入专业：")
+    stu_score = input_int_in_range("请输入成绩：","成绩",0,100)
 
     try:
-        ##try/except属于add_student_flow函数
-        stu_age = int(age_text)
-        stu_score = int(score_text)
-
-        student = Student(stu_id,stu_name, stu_age, stu_major, stu_score)
+        student = Student(stu_id, stu_name, stu_age, stu_major, stu_score)
         manager.add_student(student)
+
         print("添加成功,学生信息如下：")
         print(format_student(student))
     except Exception as e:
-        print("添加失败：", e)
+        print("添加失败",e)
 
 
 def update_student_flow(manager):
@@ -56,17 +117,30 @@ def update_student_flow(manager):
         print("当前学生信息如下：")
         print(format_student(student))
 
-        new_name = input(f"请输入新的姓名：(当前：{student.name},直接回车表示不修改):").strip()
-        age_text = input(f"请输入新的年龄：(当前：{student.age},直接回车不修改):").strip()
-        new_major = input(f"请输入新的专业：(当前：{student.major},直接回车不修改):").strip()
-        score_text = input(f"请输入新的成绩：(当前：{student.score},直接回车不修改):").strip()
+        new_name = input_optional_text(
+            f"请输入新的姓名 (当前:{student.name},直接回车表示不修改):",
+            student.name
+        )
+        new_age = input_optional_int_in_range(
+            f"请输入新的年龄 (当前:{student.age},直接回车表示不修改):",
+            "年龄",
+            student.age,
+            0
+        )
+        new_major = input_optional_text(
+            f"请输入新的专业 (当前:{student.major},直接回车表示不修改):",
+            student.major
+        )
+        new_score = input_optional_int_in_range(
+            f"请输入新的成绩(当前：{student.score},直接回车表示不修改):",
+            "成绩",
+            student.score,
+            0,
+            100
+        )
 
-        final_name = new_name if new_name else student.name
-        final_age = int(age_text) if age_text else student.age
-        final_major = new_major if new_major else student.major
-        final_score = int(score_text) if score_text else student.score 
 
-        manager.update_student_by_id(student_id,final_name,final_age,final_major,final_score)
+        manager.update_student_by_id(student_id, new_name, new_age, new_major, new_score)
     
         updated_student = manager.find_student_by_id(student_id)
         print("修改成功,修改后的学生信息如下:")
@@ -147,7 +221,7 @@ def main():
     while True:
         ##显示菜单与提示：
         show_menu()
-        choice = input("请输入你的选择：").strip()
+        choice = input_menu_choice()
         ##选择：
         if choice == "1":
             add_student_flow(manager)   ##添加学生信息
@@ -165,7 +239,7 @@ def main():
             print("数据已保存，程序退出，再见！")
             break
         else:
-            print("输入无效，请输入 1~6 的数字。")
+            print("输入无效,请输入 1~6 的数字。")
 
 
 if __name__ == "__main__":

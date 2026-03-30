@@ -13,7 +13,7 @@ class Student:
         if not isinstance(stu_score,int):
             raise TypeError("成绩必须是整数。")
         if stu_score <0 or stu_score>100:
-            raise TypeErroe("成绩必须在0到100之间")
+            raise TypeError("成绩必须在0到100之间")
         self.id=stu_id
         self.name=stu_name
         self.age=stu_age

@@ -53,7 +53,7 @@ class StudentManager:
         student.major = checked_student.major
         student.score = checked_student.score
 
-    ##列出管理器中的学生信息    
+    ##列出管理器中的学生信息
     def list_students(self):
         return  self.students.copy()
 
