@@ -2,18 +2,29 @@ from student import Student
 from manager import StudentManager
 from storage import load_students, save_students  ##读取/写入
 
+def format_student(student):
+    return (
+        f"学号：{student.id}\n"
+        f"姓名：{student.name}\n"
+        f"年龄：{student.age}\n"
+        f"专业：{student.major}\n"
+        f"成绩：{student.score}\n"
+        "------------------------"
+    )
+
 
 def show_menu():
     print("\n====== 学生信息管理系统 ======")
     print("1. 添加学生")
     print("2. 查看所有学生")
     print("3. 按学号查询学生")
-    print("4.修改学生信息")
-    print("5.删除学生")
+    print("4. 修改学生信息")
+    print("5. 删除学生")
     print("6. 保存并退出")
 
 
 def add_student_flow(manager):
+    print("\n====== 添加学生 ======")
     stu_id = input("请输入学号：").strip()
     stu_name = input("请输入姓名：").strip()
     age_text = input("请输入年龄：").strip()
@@ -27,31 +38,61 @@ def add_student_flow(manager):
 
         student = Student(stu_id,stu_name, stu_age, stu_major, stu_score)
         manager.add_student(student)
-        print("添加成功。")
+        print("添加成功,学生信息如下：")
+        print(format_student(student))
     except Exception as e:
         print("添加失败：", e)
 
 
 def update_student_flow(manager):
-    student_id = input("请输入要修改的学号：").strip()
-    new_name = input("请输入新的姓名：")
-    age_text = input("请输入新的年龄：")
-    new_major = input("请输入新的专业：")
-    score_text = input("请输入新的成绩：")
+    print("\n====== 修改学生 ======")
 
+    student_id = input("请输入要修改的学号：").strip()
     try:
-        new_age = int(age_text)
-        new_score = int(score_text)
+        student = manager.find_student_by_id(student_id)
+        if student is None:
+            print("未找到对应学号的学生。")
+            return
+        print("当前学生信息如下：")
+        print(format_student(student))
+
+        new_name = input(f"请输入新的姓名：(当前：{student.name},直接回车表示不修改):").strip()
+        age_text = input(f"请输入新的年龄：(当前：{student.age},直接回车不修改):").strip()
+        new_major = input(f"请输入新的专业：(当前：{student.major},直接回车不修改):").strip()
+        score_text = input(f"请输入新的成绩：(当前：{student.score},直接回车不修改):").strip()
+
+        final_name = new_name if new_name else student.name
+        final_age = int(age_text) if age_text else student.age
+        final_major = new_major if new_major else student.major
+        final_score = int(score_text) if score_text else student.score 
+
+        manager.update_student_by_id(student_id,final_name,final_age,final_major,final_score)
     
-        manager.update_student_by_id(student_id,new_name,new_age,new_major,new_score)
-        print("修改成功。")
+        updated_student = manager.find_student_by_id(student_id)
+        print("修改成功,修改后的学生信息如下:")
+        print(format_student(updated_student))
     except Exception as e:
         print("修改异常：",e)
 
 def delete_student_flow(manager):
-    student_id = input("请输入要删除的学号：")
+    print("\n====== 删除学生 ======")
+
+    student_id = input("请输入要删除的学号：").strip()
 
     try:
+        student = manager.find_student_by_id(student_id)
+
+        if student is None:
+            print("未找到该学号对应的学生。")
+            return
+        print("即将删除的学生信息如下：")
+        print(format_student(student))
+
+        confirm = input("如确认删除,请输入:确认;如取消删除,请直接按回车。").strip()
+        if confirm != "确认":
+            print("删除已取消。")
+            return
+
         manager.delete_student_by_id(student_id)
         print("删除成功。")
     except Exception as e:
@@ -68,7 +109,7 @@ def list_students_flow(manager):
 
     print("当前学生如下：")
     for student in students:
-        print(student.to_dict())
+        print(format_student(student))
 
 
 def find_student_flow(manager):
@@ -79,13 +120,14 @@ def find_student_flow(manager):
         if student is None:
             print("没有找到该学号对应的学生。")
         else:
-            print("找到的学生：", student.to_dict())
+            print("找到的学生：")    ##也可以加\n
+            print(format_student(student))
     except Exception as e:
         print("查询失败：", e)
 
 
 def main():
-    ##存储学生数据的本地JOSN文件：
+    ##存储学生数据的本地json文件：
     file_path = "data/students.json"
 
     ##创建一个学生管理器变量：
