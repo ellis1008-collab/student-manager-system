@@ -84,15 +84,72 @@ def input_optional_int_in_range(prompt,field_name,current_value,min_value=None,m
             continue
         return value
 
+##添加学生学号时的校检：
+def input_student_id(prompt):
+    while True:
+        text = input(prompt).strip()
+        if text =="":
+            print("学号不能为空，请重新输入。")
+            continue
+        if not text.isdigit():
+            print("学号必须是纯数字，请重新输入。")
+            continue
+        return text
+
+##添加学生姓名时的校检：
+def input_name(prompt):
+    while True:
+        text = input(prompt).strip()
+        if text == "":
+            print("姓名不能为空，请重新输入。")
+            continue
+        if text.isdigit():
+            print("姓名不能为纯数字，请重新输入。")
+            continue
+        return text
+
+##添加学生专业时的校检：
+def input_major(prompt):
+    while True:
+        text = input(prompt).strip()
+        if text == "":
+            print("成绩不能为空,请重新输入。")
+            continue
+        if text.isdigit():
+            print("专业不能为纯数字，请重新输入。")
+            continue
+        return text
+
+##修改学生姓名时的校检：
+def input_optional_name(prompt,current_value):
+    while True:
+        text = input(prompt).strip()
+        if text == "":
+            return current_value
+        if text.isdigit():
+            print("姓名不能为纯数字,或者按回车保留原值。")
+        return text
+
+##修改学生信息时对专业的校检：
+def input_optional_major(prompt,current_value):
+    while True:
+        text = input(prompt).strip()
+        if text =="":
+           return current_value
+        if text.isdigit():
+            print("专业不能为纯数字,或者回车保留原值。")
+            continue
+        return text
+        
 
 def add_student_flow(manager):
     print("\n====== 添加学生 ======")
 
     
-    stu_id = input_non_empty("请输入学号：")
-    stu_name = input_non_empty("请输入姓名：")
-    stu_age = input_int_in_range("请输入年龄:","年龄",0)
-    stu_major = input_non_empty("请输入专业：")
+    stu_id = input_student_id("请输入学号：")
+    stu_name = input_name("请输入姓名：")
+    stu_age = input_int_in_range("请输入年龄:","年龄",0,150)
+    stu_major = input_major("请输入专业：")
     stu_score = input_int_in_range("请输入成绩：","成绩",0,100)
 
     try:
@@ -117,7 +174,7 @@ def update_student_flow(manager):
         print("当前学生信息如下：")
         print(format_student(student))
 
-        new_name = input_optional_text(
+        new_name = input_optional_name(
             f"请输入新的姓名 (当前:{student.name},直接回车表示不修改):",
             student.name
         )
@@ -125,9 +182,9 @@ def update_student_flow(manager):
             f"请输入新的年龄 (当前:{student.age},直接回车表示不修改):",
             "年龄",
             student.age,
-            0
+            0,150
         )
-        new_major = input_optional_text(
+        new_major = input_optional_major(
             f"请输入新的专业 (当前:{student.major},直接回车表示不修改):",
             student.major
         )
@@ -171,7 +228,6 @@ def delete_student_flow(manager):
         print("删除成功。")
     except Exception as e:
         print("删除失败：",e)
-
 
 
 def list_students_flow(manager):

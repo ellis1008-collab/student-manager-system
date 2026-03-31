@@ -21,10 +21,17 @@
         "score": 92
     },
     {
-        "id": "abc",
-        "name": "abc",
-        "age": 19,
-        "major": "abc",
+        "id": "005",
+        "name": "孙七",
+        "age": 20,
+        "major": "人工智能",
+        "score": 100
+    },
+    {
+        "id": "006",
+        "name": "孙小七",
+        "age": 20,
+        "major": "画画",
         "score": 100
     }
 ]
