@@ -11,7 +11,7 @@
 - student.py：学生类
 - manager.py：学生管理逻辑
 - storage.py：数据读写逻辑
--datd/students.json：学生数据文件
+-data/students.json：学生数据文件
 
 ## 运行方式
 python main.py

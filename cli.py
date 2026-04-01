@@ -1,8 +1,5 @@
-from student import Student
-from manager import StudentManager
-from storage import load_students, save_students
-
-
+from service import StudentService
+##学生信息显示函数：
 def format_student(student):
     return (
         f"学号：{student.id}\n"
@@ -13,7 +10,7 @@ def format_student(student):
         "------------------------"
     )
 
-
+##菜单选择函数：
 def input_menu_choice():
     while True:
         choice = input("请输入你的选择：").strip()
@@ -21,7 +18,7 @@ def input_menu_choice():
             return choice
         print("输入无效，请输入 1~6 的数字。")
 
-
+##文本输入不为空辅助函数：
 def input_non_empty(prompt):
     while True:
         text = input(prompt).strip()
@@ -29,7 +26,7 @@ def input_non_empty(prompt):
             return text
         print("输入不能为空，请重新输入。")
 
-
+##添加时的（不能输入回车）整数输入范围辅助函数：
 def input_int_in_range(prompt, field_name, min_value=None, max_value=None):
     while True:
         text = input(prompt).strip()
@@ -50,12 +47,12 @@ def input_int_in_range(prompt, field_name, min_value=None, max_value=None):
 
         return value
 
-
+##修改为空返回原值辅助函数：
 def input_optional_text(prompt, current_value):
     text = input(prompt).strip()
     return text if text else current_value
 
-
+##修改时的整数范围输入辅助函数：
 def input_optional_int_in_range(prompt, field_name, current_value, min_value=None, max_value=None):
     while True:
         text = input(prompt).strip()
@@ -148,7 +145,7 @@ def show_menu():
     print("6. 保存并退出")
 
 
-def add_student_flow(manager):
+def add_student_flow(service):
     print("\n====== 添加学生 ======")
 
     stu_id = input_student_id("请输入学号：")
@@ -158,16 +155,15 @@ def add_student_flow(manager):
     stu_score = input_int_in_range("请输入成绩：", "成绩", 0, 100)
 
     try:
-        student = Student(stu_id, stu_name, stu_age, stu_major, stu_score)
-        manager.add_student(student)
+        student = service.add_student(stu_id,stu_name,stu_age,stu_major,stu_score)
         print("添加成功，学生信息如下：")
         print(format_student(student))
     except Exception as e:
         print("添加失败：", e)
 
 
-def list_students_flow(manager):
-    students = manager.list_students()
+def list_students_flow(service):
+    students = service.list_students()
 
     if not students:
         print("当前没有学生数据。")
@@ -178,11 +174,11 @@ def list_students_flow(manager):
         print(format_student(student))
 
 
-def find_student_flow(manager):
+def find_student_flow(service):
     student_id = input("请输入要查询的学号：").strip()
 
     try:
-        student = manager.find_student_by_id(student_id)
+        student = service.find_student_by_id(student_id)
         if student is None:
             print("没有找到该学号对应的学生。")
         else:
@@ -192,13 +188,13 @@ def find_student_flow(manager):
         print("查询失败：", e)
 
 
-def update_student_flow(manager):
+def update_student_flow(service):
     print("\n====== 修改学生信息 ======")
 
     student_id = input("请输入要修改的学号：").strip()
 
     try:
-        student = manager.find_student_by_id(student_id)
+        student = service.find_student_by_id(student_id)
 
         if student is None:
             print("未找到该学号对应的学生。")
@@ -230,22 +226,22 @@ def update_student_flow(manager):
             100
         )
 
-        manager.update_student_by_id(student_id, new_name, new_age, new_major, new_score)
+        updated_student = service.update_student_by_id(student_id, new_name, new_age, new_major, new_score)
 
-        updated_student = manager.find_student_by_id(student_id)
+        updated_student = service.find_student_by_id(student_id)
         print("修改成功，修改后的学生信息如下：")
         print(format_student(updated_student))
     except Exception as e:
         print("修改失败：", e)
 
 
-def delete_student_flow(manager):
+def delete_student_flow(service):
     print("\n====== 删除学生 ======")
 
     student_id = input("请输入要删除的学号：").strip()
 
     try:
-        student = manager.find_student_by_id(student_id)
+        student = service.find_student_by_id(student_id)
 
         if student is None:
             print("未找到该学号对应的学生。")
@@ -260,37 +256,30 @@ def delete_student_flow(manager):
             print("已取消删除。")
             return
 
-        manager.delete_student_by_id(student_id)
+        deleted_student = service.delete_student_by_id(student_id)
         print("删除成功。")
     except Exception as e:
         print("删除失败：", e)
 
 
 def run_cli():
-    file_path = "data/students.json"
-    manager = StudentManager()
-
-    loaded_students = load_students(file_path)
-    for student in loaded_students:
-        manager.add_student(student)
-
-    print(f"已加载 {len(manager.list_students())} 条学生数据。")
-
-    while True:
+   service = StudentService()
+   print(f"已加载{len(service.list_students())}条学生数据。")
+   while True:
         show_menu()
         choice = input_menu_choice()
 
         if choice == "1":
-            add_student_flow(manager)
+            add_student_flow(service)
         elif choice == "2":
-            list_students_flow(manager)
+            list_students_flow(service)
         elif choice == "3":
-            find_student_flow(manager)
+            find_student_flow(service)
         elif choice == "4":
-            update_student_flow(manager)
+            update_student_flow(service)
         elif choice == "5":
-            delete_student_flow(manager)
+            delete_student_flow(service)
         elif choice == "6":
-            save_students(file_path, manager.list_students())
+            service.save()
             print("数据已保存，程序退出，再见！")
             break
