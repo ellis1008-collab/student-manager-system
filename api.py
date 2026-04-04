@@ -65,12 +65,13 @@ async def create_student(student_data:StudentCreateRequest):
             student_data.major,
             student_data.score,
         )
+        service.save()
         return student_to_dict(student)
     except(ValueError,TypeError)as e:
         raise HTTPException(status_code=400,detail=str(e))
 
 ##修改学生接口：
-@app.put("/student{student_id}")
+@app.put("/students/{student_id}")
 async def update_student(student_id:str, student_data:StudentUpdateRequest):
     existing_student = service.find_student_by_id(student_id)
     if existing_student is None:
@@ -83,7 +84,17 @@ async def update_student(student_id:str, student_data:StudentUpdateRequest):
             student_data.major,
             student_data.score,
             )
+        service.save()
         return student_to_dict(updated_student)
     except (ValueError, TypeError) as e:
         raise HTTPException (status_code=400,detail=str(e))
-         
+
+##删除学生接口：
+@app.delete("/students/{student_id}")
+async def delete_student(student_id:str):
+    try:
+        deleted_student = service.delete_student_by_id(student_id)
+        service.save()
+        return student_to_dict(deleted_student)
+    except ValueError as e:
+        raise HTTPException(status_code=404,detail=str(e))
