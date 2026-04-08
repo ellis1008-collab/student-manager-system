@@ -1,17 +1,28 @@
-# student_manager_cli
-一个基于 python 的命令行学生信息管理系统
+# 学生信息管理系统
 
-## 当前进度
-- 已完成项目初始化
-- 已完成命令行菜单骨架
-- 后续将逐步实现增删查改和JSON存储
+这是一个基于 Python 和 FastAPI 实现的学生信息管理系统项目。
 
-## 当前项目结构
-- main.py： 程序入口和菜单
-- student.py：学生类
-- manager.py：学生管理逻辑
-- storage.py：数据读写逻辑
--data/students.json：学生数据文件
+## 项目功能
+- 添加学生
+- 查看所有学生
+- 按学号查询学生
+- 修改学生信息
+- 删除学生信息
+
+## 当前项目状态
+- 已完成命令行版本
+- 已完成 FastAPI 基础后端化
+- 当前数据层主要基于 JSON 文件存储
+
+## 技术栈
+- Python
+- FastAPI
+- Git
 
 ## 运行方式
-python main.py
+1. 安装依赖
+2. 进入项目目录
+3. 运行：
+   uvicorn api:app --reload
+4. 打开浏览器访问：
+   http://127.0.0.1:8000/docs

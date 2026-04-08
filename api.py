@@ -262,7 +262,9 @@ def translate_validation_error(error: dict) -> str:
 
 
 
-##新增422异常处理器：
+##exception_handler:app提供的一个方法，作用是注册异常处理器，
+##告诉FastAPI,出现下面函数中的异常时，就按照我的方法解决
+##请求校检异常处理器：
 @app.exception_handler(RequestValidationError)
 async def request_validation_exception_handler(
     request: Request,
@@ -284,5 +286,35 @@ async def request_validation_exception_handler(
     )
     return JSONResponse(
         status_code = status.HTTP_422_UNPROCESSABLE_ENTITY,
+        content=payload.model_dump(),
+    )
+
+
+##HTTPException统一处理器：
+@app.exception_handler(HTTPException)
+async def http_exception_handler(
+    request: Request, 
+    exc: HTTPException,
+):  
+    if exc.status_code == status.HTTP_404_NOT_FOUND:
+        top_message = "目标资源不存在。"
+    elif exc.status_code == status.HTTP_400_BAD_REQUEST:
+        top_message = "请求数据不合法。"
+    else:
+        top_message = "请求处理失败。"
+
+    payload = ErrorResponse(
+        code=exc.status_code,
+        message=top_message,
+        errors=[
+            ErrorItem(
+                field=None,
+                message=str(exc.detail),
+            )
+        ],
+    )
+
+    return JSONResponse(
+        status_code=exc.status_code,
         content=payload.model_dump(),
     )
