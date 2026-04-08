@@ -16,7 +16,7 @@ class Student:
             raise ValueError("专业不能是纯数字。")
 
         if not isinstance(stu_age,int):
-            raise TypError("年龄必须是整数。")
+            raise TypeError("年龄必须是整数。")
 
         if stu_age < 0:
             raise ValueError("年龄不能小于0。")
