@@ -1,7 +1,7 @@
 import sqlite3
 
 def init_db():
-    conn = sqlite3.connect("data/student.db")
+    conn = sqlite3.connect("data/students.db")
     cursor = conn.cursor()
     cursor.execute("""
     CREATE TABLE 
