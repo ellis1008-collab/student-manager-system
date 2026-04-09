@@ -101,4 +101,3 @@ Introduce a testing system
 Continue improving the project into a more standardized FastAPI architecture
 
 The system has completed its first GitHub remote hosting setup
-......
