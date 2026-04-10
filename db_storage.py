@@ -36,9 +36,9 @@ def add_student_to_db(student_data):
             ),
         )
         conn.commit()
-        return True
+        return True,"新增成功。"
     except sqlite3.IntegrityError:    ##主要是主键冲突：比如学号已经存在，又添加相同学号
-        return False
+        return False,"学好已存在,不能重复添加。"
     finally:
         conn.close()
 

@@ -32,7 +32,7 @@ if __name__ == "__main__":
     get_student_by_id_service("001"))
 
     text_student = {
-        "id": "004",
+        "id": "004",     
         "name": "赵六",
         "age": 21,
         "major": "人工智能",

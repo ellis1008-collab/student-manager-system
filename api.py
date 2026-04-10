@@ -1,12 +1,13 @@
-from fastapi import FastAPI, HTTPException, Request, status
+from fastapi import FastAPI, HTTPException, status,Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field, field_validator
 
-from service import StudentService
+from service import get_all_students_service
+from service import get_student_by_id_service
+from service import add_student_service
 
 app = FastAPI(title="Student Manager API")
-service = StudentService()
 
 ##响应体模型
 class StudentResponse(BaseModel):
@@ -142,17 +143,17 @@ async def root():
 ##查看所有学生接口：
 @app.get("/students",response_model=list[StudentResponse])
 async def get_students():
-    students = service.list_students()
-    return [student_to_dict(student) for student in students]
+    students = get_all_students_service()
+    return students
 
 
 ##按学号查询接口：
 @app.get("/students/{student_id}",response_model=StudentResponse)
 async def get_student(student_id: str):
-    student = service.find_student_by_id(student_id)
+    student = get_student_by_id_service(student_id)
     if student is None:
         raise HTTPException(status_code=404, detail="未找到该学号对应的学生。")
-    return student_to_dict(student)
+    return student
 
 ##添加（创建）学生接口：
 @app.post(
@@ -161,18 +162,12 @@ async def get_student(student_id: str):
     status_code=status.HTTP_201_CREATED
     )
 async def create_student(student_data:StudentCreateRequest):
-    try:
-        student = service.add_student(
-            student_data.id,
-            student_data.name,
-            student_data.age,
-            student_data.major,
-            student_data.score,
-        )
-        service.save()
-        return student_to_dict(student)
-    except(ValueError,TypeError)as e:
-        raise HTTPException(status_code=400,detail=str(e))
+    success,message = add_student_service(student_data.model_dump())
+    if not success:
+        raise HTTPException(status_code=400,detail=message)
+    created_student = get_student_by_id_service(student_data.id)
+    return created_student
+
 
 ##修改学生接口：
 @app.put("/students/{student_id}",response_model=StudentResponse)
