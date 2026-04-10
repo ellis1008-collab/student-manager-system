@@ -1,52 +1,43 @@
-from student import Student
-from manager import StudentManager
-from storage import load_students,save_students
+from db_storage import add_student_to_db
+from db_storage import get_all_students_from_db
+from db_storage import get_student_by_id_from_db
 
+##获取全部学生（字典列表）：
+def get_all_students_service():
+    students = get_all_students_from_db()
+    return students
 
-class StudentService:
-    def __init__(self,file_path="data/students.json"):
-    ##为这个类创建两个属性：
-        self.file_path = file_path
-        self.manager = StudentManager()
+##按学号查询学生：
+def get_student_by_id_service(student_id):
+    student = get_student_by_id_from_db(student_id)
+    return student
 
-        ##读取JSON文本的学生数据，并存储在学生服务层(manager属性的列表)里面：
-        loaded_students = load_students(self.file_path)
-        for student in loaded_students:
-            self.manager.add_student(student)
+##添加学生：
+def add_student_service(student_data):
+    existing_student = get_student_by_id_from_db(student_data["id"])
 
-    ##manager中的copy()
-    def list_students(self):
-        return self.manager.list_students()
+    if existing_student is not None:
+        return False,"学号已存在,不能重复添加。"
+    success = add_student_to_db(student_data)
+    if success:
+        return True,"新增成功。"
+    return False,"新增失败。"
+
+if __name__ == "__main__":
     
-    ##查询学生有些BUG(可输入空，输出没找到)
-    def find_student_by_id(self,student_id):
-        return self.manager.find_student_by_id(student_id)
+    print("全部学生：",
+    get_all_students_service())
 
-    ##添加学生：
-    def add_student(self,stu_id,stu_name,stu_age,stu_major,stu_score):
-        student = Student(stu_id,stu_name,stu_age,stu_major,stu_score)
-        self.manager.add_student(student)
-        return student
+    print("查询 001 :",
+    get_student_by_id_service("001"))
+
+    text_student = {
+        "id": "004",
+        "name": "赵六",
+        "age": 21,
+        "major": "人工智能",
+        "score": 91,
+        }
     
-    ##修改学生：
-    def update_student_by_id(self,student_id,new_name,new_age,new_major,new_score):
-        self.manager.update_student_by_id(student_id,new_name,new_age,new_major,new_score)
-        return self.manager.find_student_by_id(student_id)
-   
-    ##删除学生：
-    def delete_student_by_id(self,student_id):
-        student = self.manager.find_student_by_id(student_id)
-
-        if student is None:
-            raise ValueError("未找到该学号对应的学生。")
-        
-        self.manager.delete_student_by_id(student_id)
-        return student
-    
-    ##储存(覆盖写入）：
-    def save(self):
-        save_students(self.file_path,self.manager.list_students())
-
-
-
-
+    result = add_student_service(text_student)
+    print("新增测试结果：",result)
