@@ -29,7 +29,7 @@ class Student:
             raise TypeError("成绩必须是整数。")
 
         if stu_score <0 or stu_score>100:
-            raise TypeError("成绩必须在0到100之间")
+            raise TypeError("成绩必须在 0 到 100 之间")
 
         self.id=stu_id.strip()
         self.name=stu_name.strip()

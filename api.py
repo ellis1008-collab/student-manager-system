@@ -128,19 +128,6 @@ class StudentUpdateRequest(BaseModel):
         return value
 
 
-
-
-
-def student_to_dict(student):
-    return {
-        "id": student.id,
-        "name": student.name,
-        "age": student.age,
-        "major": student.major,
-        "score": student.score,
-    }
-
-
 ##根路径接口：
 @app.get("/")
 async def root():

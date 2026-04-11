@@ -10,24 +10,24 @@ def get_all_students_service():
     return students
 
 
-##按学号查询学生：
+##按学号查询学生（已修改）：
 def get_student_by_id_service(student_id):
     student = get_student_by_id_from_db(student_id)
     return student
 
 
-##添加学生：
+##添加学生（已修改）：
 def add_student_service(student_data):
     existing_student = get_student_by_id_from_db(student_data["id"])
 
     if existing_student is not None:
-        return False, "学号已存在,不能重复添加。"
-    success = add_student_to_db(student_data)
+        return False, "学号已存在，不能重复添加。"
+    success ,message = add_student_to_db(student_data)
     if success:
-        return True, "新增成功。"
-    return False, "新增失败。"
+        return True, message
+    return False, message
 
-##修改学生：
+##修改学生(已修改）：
 def update_student_service(student_id,student_data):
     existing_student = get_student_by_id_from_db(student_id)
     
@@ -38,7 +38,7 @@ def update_student_service(student_id,student_data):
     updated_student = get_student_by_id_from_db(student_id)
     return True,"修改成功。",updated_student
 
-##删除学生：
+##删除学生(已修改）：
 def delete_student_service(student_id):
     existing_student = get_student_by_id_from_db(student_id)
     if existing_student is None:

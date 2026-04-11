@@ -18,7 +18,7 @@ def insert_student(student_id,name,age,major,score):
         conn.commit()
         print("新增成功。")
     except sqlite3.IntegrityError:
-        print(f"新增失败,学号{student_id}已存在。")
+        print(f"新增失败，学号{student_id}已存在。")
     finally:
         conn.close()
 

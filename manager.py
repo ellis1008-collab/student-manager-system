@@ -76,7 +76,7 @@ if __name__=="__main__":
     print("\n下面开始测试删除学生:")
     try:
         manager.delete_student_by_id("002")
-        print("删除学号002成功")
+        print("删除学号 002 成功")
     except Exception as e:
         print("删除失败：",e)
     
