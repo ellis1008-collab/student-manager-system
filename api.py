@@ -6,6 +6,12 @@ from pydantic import BaseModel, Field, field_validator
 from service import get_all_students_service
 from service import get_student_by_id_service
 from service import add_student_service
+from service import update_student_service
+from service import delete_student_service
+
+
+
+
 
 app = FastAPI(title="Student Manager API")
 
@@ -84,7 +90,7 @@ class StudentUpdateRequest(BaseModel):
         description="学生姓名",
         min_length=1,
         max_length=20,
-    )
+    )  
     age: int = Field(
         description="年龄，范围是 0 到 150",
         ge=0,
@@ -140,14 +146,14 @@ def student_to_dict(student):
 async def root():
     return {"message": "Student Manager API is running"}
 
-##查看所有学生接口：
+##查看所有学生接口(已修改）：
 @app.get("/students",response_model=list[StudentResponse])
 async def get_students():
     students = get_all_students_service()
     return students
 
 
-##按学号查询接口：
+##按学号查询接口（已修改）：
 @app.get("/students/{student_id}",response_model=StudentResponse)
 async def get_student(student_id: str):
     student = get_student_by_id_service(student_id)
@@ -155,7 +161,7 @@ async def get_student(student_id: str):
         raise HTTPException(status_code=404, detail="未找到该学号对应的学生。")
     return student
 
-##添加（创建）学生接口：
+##添加（创建）学生接口（已修改）：
 @app.post(
     "/students",
     response_model=StudentResponse,
@@ -169,34 +175,25 @@ async def create_student(student_data:StudentCreateRequest):
     return created_student
 
 
-##修改学生接口：
+##修改学生接口(已修改）：
 @app.put("/students/{student_id}",response_model=StudentResponse)
 async def update_student(student_id:str, student_data:StudentUpdateRequest):
-    existing_student = service.find_student_by_id(student_id)
-    if existing_student is None:
-        raise HTTPException(status_code=404,detail="未找到该学号对应的学生。")
-    try:
-        updated_student = service.update_student_by_id(
-            student_id,
-            student_data.name,
-            student_data.age,
-            student_data.major,
-            student_data.score,
-            )
-        service.save()
-        return student_to_dict(updated_student)
-    except (ValueError, TypeError) as e:
-        raise HTTPException (status_code=400,detail=str(e))
+    
+    success,message,updated_student = update_student_service(student_id,student_data.model_dump())
+    if not success:
+        raise HTTPException(status_code=404,detail=message)
+    return updated_student
 
-##删除学生接口：
+
+
+##删除学生接口(已修改）：
 @app.delete("/students/{student_id}",response_model=StudentResponse)
 async def delete_student(student_id:str):
-    try:
-        deleted_student = service.delete_student_by_id(student_id)
-        service.save()
-        return student_to_dict(deleted_student)
-    except ValueError as e:
-        raise HTTPException(status_code=404,detail=str(e))
+    success,message,deleted_student = delete_student_service(student_id)
+    if not success:
+        raise HTTPException(status_code=404,detail=message)
+    return deleted_student
+
 
 
 ##错误的一部分：
