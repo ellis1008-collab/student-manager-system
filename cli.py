@@ -1,4 +1,5 @@
-from service import StudentService
+from cli_service import StudentService
+cli_service = StudentService()
 ##学生信息显示函数：
 def format_student(student):
     return (
@@ -6,7 +7,7 @@ def format_student(student):
         f"姓名：{student.name}\n"
         f"年龄：{student.age}\n"
         f"专业：{student.major}\n"
-        f"成绩：{student.score}\n"
+        f"成绩：{student.score}\n"  
         "------------------------"
     )
 
@@ -263,23 +264,22 @@ def delete_student_flow(service):
 
 
 def run_cli():
-   service = StudentService()
-   print(f"已加载{len(service.list_students())}条学生数据。")
+   print(f"已加载{len(cli_service.list_students())}条学生数据。")
    while True:
         show_menu()
         choice = input_menu_choice()
 
         if choice == "1":
-            add_student_flow(service)
+            add_student_flow(cli_service)
         elif choice == "2":
-            list_students_flow(service)
+            list_students_flow(cli_service)
         elif choice == "3":
-            find_student_flow(service)
+            find_student_flow(cli_service)
         elif choice == "4":
-            update_student_flow(service)
+            update_student_flow(cli_service)
         elif choice == "5":
-            delete_student_flow(service)
+            delete_student_flow(cli_service)
         elif choice == "6":
-            service.save()
+            cli_service.save()
             print("数据已保存，程序退出，再见！")
             break
