@@ -29,6 +29,7 @@ The project still keeps the earlier command-line version, while the current main
 - `main.py`: entry point for the command-line program
 - `manager.py`: student management logic
 - `json_storage.py`: JSON file read/write logic
+- `cli_service.py`:CLI service
 - `data/students.json`: data file for the command-line version
 
 ### 2. FastAPI + SQLite Version Files
