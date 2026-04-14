@@ -2,7 +2,7 @@ import os
 import sqlite3
 
 ##默认数据库路径：
-DEFAULT_DB_PATH = "data/student.db"
+DEFAULT_DB_PATH = "data/students.db"
 
 
 ##动态获取数据库路径函数：
