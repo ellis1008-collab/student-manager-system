@@ -1,11 +1,18 @@
+import os
 import sqlite3
 
-DB_PATH = "data/students.db"
+##默认数据库路径：
+DEFAULT_DB_PATH = "data/student.db"
 
 
-##连接函数：
+##动态获取数据库路径函数：
+def get_db_path():
+    return os.getenv("STUDENT_DB_PATH",DEFAULT_DB_PATH)
+
+
+##创建并返回一个数据库连接对象：
 def get_connection():
-    return sqlite3.connect(DB_PATH)
+    return sqlite3.connect(get_db_path())
 
 
 ##将返回的元组结构转换为字典结构   ：
