@@ -15,7 +15,7 @@ from service import delete_student_service
 
 app = FastAPI(title="Student Manager API")
 
-##响应体模型
+##学生响应体模型
 class StudentResponse(BaseModel):
     id:str=Field(description="学生学号")
     name:str=Field(description="学生姓名")
@@ -260,7 +260,7 @@ async def request_validation_exception_handler(
         )
     payload = ErrorResponse(
         code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-        message="请求参数校检失败。",
+        message="请求参数校检失败。",   ##（路由前）
         errors=errors,
     )
     return JSONResponse(
@@ -273,8 +273,9 @@ async def request_validation_exception_handler(
 @app.exception_handler(HTTPException)
 async def http_exception_handler(
     request: Request, 
-    exc: HTTPException,
+    exc: HTTPException,        ##外部异常状态码
 ):  
+    ##内部异常状态码的异常说明（只有内部有异常说明）（路由后，主动抛出的HTTP异常）
     if exc.status_code == status.HTTP_404_NOT_FOUND:
         top_message = "目标资源不存在。"
     elif exc.status_code == status.HTTP_400_BAD_REQUEST:

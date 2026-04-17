@@ -46,5 +46,25 @@ The project still keeps the earlier command-line version, while the current main
 
 Run the following command in the project directory:
 
-```bash
 python main.py
+
+## Testing
+
+Run automated tests from the project root directory:
+
+python -m pytest
+The test suite is configured through pyproject.toml and only collects tests from the tests directory.
+The tests use an isolated test database and do not modify the runtime database file under data/students.db.
+
+##Current Test Coverage
+The current automated tests cover the following cases:
+Root endpoint health check
+Get all students
+Create a student successfully
+Update an existing student successfully
+Delete an existing student successfully
+Reject creating a student with a duplicate ID
+Reject updating a non-existent student
+Reject deleting a non-existent student
+
+---
