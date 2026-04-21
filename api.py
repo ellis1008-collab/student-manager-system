@@ -15,7 +15,7 @@ from service import delete_student_service
 
 app = FastAPI(title="Student Manager API")
 
-##学生响应体模型
+##学生响应体模型：写在路由里面
 class StudentResponse(BaseModel):
     id:str=Field(description="学生学号")
     name:str=Field(description="学生姓名")
@@ -128,61 +128,6 @@ class StudentUpdateRequest(BaseModel):
         return value
 
 
-##根路径接口：
-@app.get("/")
-async def root():
-    return {"message": "Student Manager API is running"}
-
-##查看所有学生接口(已修改）：
-@app.get("/students",response_model=list[StudentResponse])
-async def get_students():
-    students = get_all_students_service()
-    return students
-
-
-##按学号查询接口（已修改）：
-@app.get("/students/{student_id}",response_model=StudentResponse)
-async def get_student(student_id: str):
-    student = get_student_by_id_service(student_id)
-    if student is None:
-        raise HTTPException(status_code=404, detail="未找到该学号对应的学生。")
-    return student
-
-##添加（创建）学生接口（已修改）：
-@app.post(
-    "/students",
-    response_model=StudentResponse,
-    status_code=status.HTTP_201_CREATED
-    )
-async def create_student(student_data:StudentCreateRequest):
-    success,message = add_student_service(student_data.model_dump())
-    if not success:
-        raise HTTPException(status_code=400,detail=message)
-    created_student = get_student_by_id_service(student_data.id)
-    return created_student
-
-
-##修改学生接口(已修改）：
-@app.put("/students/{student_id}",response_model=StudentResponse)
-async def update_student(student_id:str, student_data:StudentUpdateRequest):
-    
-    success,message,updated_student = update_student_service(student_id,student_data.model_dump())
-    if not success:
-        raise HTTPException(status_code=404,detail=message)
-    return updated_student
-
-
-
-##删除学生接口(已修改）：
-@app.delete("/students/{student_id}",response_model=StudentResponse)
-async def delete_student(student_id:str):
-    success,message,deleted_student = delete_student_service(student_id)
-    if not success:
-        raise HTTPException(status_code=404,detail=message)
-    return deleted_student
-
-
-
 ##错误的一部分：
 class ErrorItem(BaseModel):
     field: str | None = Field(default=None,description="出错字段位置")
@@ -193,6 +138,7 @@ class ErrorResponse(BaseModel):
     code: int = Field(description="HTTP 状态码")
     message: str = Field(description="错误总说明")
     errors: list[ErrorItem] = Field(default_factory=list,description="详细错误列表")
+
 
 
 ##格式化错误位置信息：
@@ -238,6 +184,88 @@ def translate_validation_error(error: dict) -> str:
         return "该字段必须是字符串。"
 
     return msg
+
+
+
+COMMON_ERROR_RESPONSES = {
+    400:{"model": ErrorResponse,"description":"请求数据不合法。"},
+    404:{"model":ErrorResponse,"description":"目标资源不存在。"},
+    422:{"model":ErrorResponse,"description":"请求参数校检失败。"}
+}
+
+
+##根路径接口：
+@app.get("/")
+async def root():
+    return {"message": "Student Manager API is running"}
+
+##查看所有学生接口(已修改）：
+@app.get("/students",response_model=list[StudentResponse])
+async def get_students():
+    students = get_all_students_service()
+    return students
+
+
+##按学号查询接口（已修改）：
+@app.get(
+        "/students/{student_id}",
+        response_model=StudentResponse,
+        responses = {404:COMMON_ERROR_RESPONSES[404]},
+        )
+async def get_student(student_id: str):
+    student = get_student_by_id_service(student_id)
+    if student is None:
+        raise HTTPException(status_code=404, detail="未找到该学号对应的学生。")
+    return student
+
+##添加（创建）学生接口（已修改）：
+@app.post(
+    "/students",
+    response_model=StudentResponse,
+    status_code=status.HTTP_201_CREATED,
+    responses={
+        400:COMMON_ERROR_RESPONSES[400],
+        422:COMMON_ERROR_RESPONSES[422],
+    },
+    )
+
+async def create_student(student_data:StudentCreateRequest):
+    success,message = add_student_service(student_data.model_dump())
+    if not success:
+        raise HTTPException(status_code=400,detail=message)
+    created_student = get_student_by_id_service(student_data.id)
+    return created_student
+
+
+##修改学生接口(已修改）：
+@app.put("/students/{student_id}",
+         response_model=StudentResponse,
+         responses = {
+             404:COMMON_ERROR_RESPONSES[404],
+             422:COMMON_ERROR_RESPONSES[422],
+         },
+         )
+async def update_student(student_id:str, student_data:StudentUpdateRequest):
+    
+    success,message,updated_student = update_student_service(student_id,student_data.model_dump())
+    if not success:
+        raise HTTPException(status_code=404,detail=message)
+    return updated_student
+
+
+
+##删除学生接口(已修改）：
+@app.delete("/students/{student_id}",
+            response_model=StudentResponse,
+            responses = {
+                404:COMMON_ERROR_RESPONSES[404]},
+            )
+async def delete_student(student_id:str):
+    success,message,deleted_student = delete_student_service(student_id)
+    if not success:
+        raise HTTPException(status_code=404,detail=message)
+    return deleted_student
+
 
 
 
