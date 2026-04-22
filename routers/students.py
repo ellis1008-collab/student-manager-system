@@ -14,16 +14,19 @@ from schemas import (
     StudentUpdateRequest,
 )
 
-router = APIRouter()
+router = APIRouter(
+    prefix="/students",
+    tags=["students"]    
+)
 
 
-@router.get("/students", response_model=list[StudentResponse])
+@router.get("/", response_model=list[StudentResponse])
 def get_students():
     return get_all_students_service()
 
 
 @router.get(
-    "/students/{student_id}",
+    "/{student_id}",
     response_model=StudentResponse,
     responses={404: COMMON_ERROR_RESPONSES[404]},
 )
@@ -37,7 +40,7 @@ def get_student(student_id: str):
 
 
 @router.post(
-    "/students",
+    "/",
     response_model=StudentResponse,
     status_code=status.HTTP_201_CREATED,
     responses={
@@ -56,7 +59,7 @@ def create_student(student_data: StudentCreateRequest):
 
 
 @router.put(
-    "/students/{student_id}",
+    "/{student_id}",
     response_model=StudentResponse,
     responses={
         404: COMMON_ERROR_RESPONSES[404],
@@ -75,7 +78,7 @@ def update_student(student_id: str, student_data: StudentUpdateRequest):
 
 
 @router.delete(
-    "/students/{student_id}",
+    "/{student_id}",
     response_model=StudentResponse,
     responses={404: COMMON_ERROR_RESPONSES[404]},
 )

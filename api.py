@@ -1,8 +1,10 @@
 from fastapi import FastAPI, HTTPException, status,Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
+
 from routers.students import router as students_router
 from schemas import ErrorResponse, ErrorItem
+
 app = FastAPI(title="Student Manager API")
 app.include_router(students_router)
 
