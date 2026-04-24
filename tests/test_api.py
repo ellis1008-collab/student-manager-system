@@ -153,7 +153,7 @@ def test_create_student_with_duplicate_id_returns_400(client_with_test_db):
         assert data["message"] == "请求数据不合法。"
         assert len(data["errors"]) == 1
         assert data["errors"][0]["field"] is None
-        assert data["errors"][0]["message"] == "学号已存在，不能重复添加。"
+        assert data["errors"][0]["message"] == "学号已存在,不能重复添加。"
 
         list_response = client_with_test_db.get("/students")
 

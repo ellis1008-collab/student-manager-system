@@ -1,10 +1,10 @@
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, HTTPException, status, Depends
+from dependencies import get_student_or_404, StudentDepends, StudentIdDepends 
 
 from service import (
     add_student_service,
     delete_student_service,
     get_all_students_service,
-    get_student_by_id_service,
     update_student_service,
 )
 from schemas import (
@@ -13,10 +13,10 @@ from schemas import (
     StudentResponse,
     StudentUpdateRequest,
 )
-
+  
 router = APIRouter(
     prefix="/students",
-    tags=["students"]    
+    tags=["students"],
 )
 
 
@@ -28,14 +28,10 @@ def get_students():
 @router.get(
     "/{student_id}",
     response_model=StudentResponse,
-    responses={404: COMMON_ERROR_RESPONSES[404]},
+    responses={404: COMMON_ERROR_RESPONSES[404],
+               400:COMMON_ERROR_RESPONSES[400],},
 )
-def get_student(student_id: str):
-    student = get_student_by_id_service(student_id)
-
-    if student is None:
-        raise HTTPException(status_code=404, detail="未找到该学号对应的学生。")
-
+def get_student(student :StudentDepends):
     return student
 
 
@@ -45,18 +41,14 @@ def get_student(student_id: str):
     status_code=status.HTTP_201_CREATED,
     responses={
         400: COMMON_ERROR_RESPONSES[400],
-        422: COMMON_ERROR_RESPONSES[422],
-    },
+        422: COMMON_ERROR_RESPONSES[422],},
 )
 def create_student(student_data: StudentCreateRequest):
     success, message = add_student_service(student_data.model_dump())
 
     if not success:
         raise HTTPException(status_code=400, detail=message)
-
-    created_student = get_student_by_id_service(student_data.id)
-    return created_student
-
+    return get_student_or_404(student_data.id )
 
 @router.put(
     "/{student_id}",
@@ -64,15 +56,15 @@ def create_student(student_data: StudentCreateRequest):
     responses={
         404: COMMON_ERROR_RESPONSES[404],
         422: COMMON_ERROR_RESPONSES[422],
+        400: COMMON_ERROR_RESPONSES[400],
     },
+    dependencies=[Depends(get_student_or_404)],
 )
-def update_student(student_id: str, student_data: StudentUpdateRequest):
-    success, message, updated_student = update_student_service(
-        student_id, student_data.model_dump()
-    )
-
-    if not success:
-        raise HTTPException(status_code=404, detail=message)
+def update_student(student_id: StudentIdDepends, 
+                   student_data: StudentUpdateRequest):
+    
+    _, _, updated_student = update_student_service(
+        student_id, student_data.model_dump())
 
     return updated_student
 
@@ -80,12 +72,11 @@ def update_student(student_id: str, student_data: StudentUpdateRequest):
 @router.delete(
     "/{student_id}",
     response_model=StudentResponse,
-    responses={404: COMMON_ERROR_RESPONSES[404]},
+    responses={404: COMMON_ERROR_RESPONSES[404],
+               400: COMMON_ERROR_RESPONSES[400],},
+    dependencies=[Depends(get_student_or_404)],
 )
-def delete_student(student_id: str):
-    success, message, deleted_student = delete_student_service(student_id)
-
-    if not success:
-        raise HTTPException(status_code=404, detail=message)
+def delete_student(student_id: StudentIdDepends):
+    _, _, deleted_student = delete_student_service(student_id)
 
     return deleted_student

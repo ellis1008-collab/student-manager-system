@@ -92,9 +92,9 @@ async def request_validation_exception_handler(
 @app.exception_handler(HTTPException)
 async def http_exception_handler(
     request: Request, 
-    exc: HTTPException,        ##外部异常状态码
+    exc: HTTPException,        
 ):  
-    ##内部异常状态码的异常说明（只有内部有异常说明）（路由后，主动抛出的HTTP异常）
+    
     if exc.status_code == status.HTTP_404_NOT_FOUND:
         top_message = "目标资源不存在。"
     elif exc.status_code == status.HTTP_400_BAD_REQUEST:
