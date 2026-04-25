@@ -4,11 +4,16 @@ from fastapi.responses import JSONResponse
 
 from routers.students import router as students_router
 from schemas import ErrorItem, ErrorResponse
+from config import settings
+from logging_config import logger, setup_logging
+
+setup_logging()
+logger.info("Student Manager API starting...")
 
 app = FastAPI(
-    title="Student Manager API",
-    description="基于 FastAPI 的学生信息管理系统后端接口，支持学生的新增、查询、修改、删除、以及统一错误响应。",
-    version="0.4.4",
+    title=settings.app_title,
+    description=settings.app_description,
+    version=settings.app_version,
     )
 app.include_router(students_router)
 
@@ -60,6 +65,7 @@ def translate_validation_error(error: dict) -> str:
 ##根路径接口：
 @app.get("/")
 async def root():
+    logger.info("Root endpoint called")
     return {"message": "Student Manager API is running"}
 
 
@@ -72,6 +78,7 @@ async def request_validation_exception_handler(
     request: Request,
     exc:RequestValidationError,
 ):
+    logger.warning("Request validation failed: %s",exc.errors())
     errors = []
 
     for error in exc.errors():
@@ -98,6 +105,12 @@ async def http_exception_handler(
     request: Request, 
     exc: HTTPException,        
 ):  
+    
+    logger.warning(
+        "HTTP exception occurred: status_code=%s, detail=%s",
+        exc.status_code,
+        exc.detail,
+    )
     
     if exc.status_code == status.HTTP_404_NOT_FOUND:
         top_message = "目标资源不存在。"
