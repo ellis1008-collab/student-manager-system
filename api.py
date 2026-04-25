@@ -5,7 +5,11 @@ from fastapi.responses import JSONResponse
 from routers.students import router as students_router
 from schemas import ErrorResponse, ErrorItem
 
-app = FastAPI(title="Student Manager API")
+app = FastAPI(
+    title="Student Manager API",
+    description="基于 FastAPI 的学生信息管理系统后端接口，支持学生的新增，查询，修改，删除，以及统一错误响应。",
+    version="0.4.4",
+    )
 app.include_router(students_router)
 
 ##格式化错误位置信息：

@@ -1,10 +1,18 @@
-from fastapi import HTTPException, status,Depends
+from fastapi import HTTPException, status,Depends, Path
 from service import get_student_by_id_service
 from typing import Annotated
 
 
 ##校检路径中的路径参数 student_id 是否合法：
-def validate_student_id(student_id:str):
+def validate_student_id(
+        student_id: Annotated[
+            str,
+            Path(
+                description="学生学号，必须是纯数字；例如 001。",
+                examples=["001"],
+            ),
+        ]
+        ):
     student_id = student_id.strip()
     if student_id == "":
         raise HTTPException(
