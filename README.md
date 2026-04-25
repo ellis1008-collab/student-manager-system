@@ -1,31 +1,52 @@
-学生信息管理系统
+# 学生信息管理系统
 
 这是一个基于 Python、FastAPI、SQLite 和 SQLModel ORM 实现的学生信息管理系统项目。
 
-项目保留了早期的命令行版本，同时已经完成了基于 FastAPI + SQLite + ORM 的后端接口版本，并补充了最小测试体系与统一错误响应结构。
+项目最初是一个命令行学生信息管理系统，后续逐步演进为具备后端接口、数据库存储、ORM 操作、统一错误响应、接口文档和自动化测试的学习型后端工程项目。
 
 ---
 
-一、项目简介
+## 1. 项目简介
 
-本项目最初是一个基于 JSON 文件存储的命令行学生信息管理系统，后续逐步演进为一个具备后端接口、数据库存储、ORM 操作、自动化测试和接口文档的学习型工程项目。
+本项目用于管理学生信息，支持学生数据的新增、查询、修改和删除。
 
-当前项目的核心目标是：
+当前项目同时保留了早期命令行版本，并已经完成 FastAPI 后端接口版本。后端版本已经接入 SQLite 数据库和 ORM 操作，并补充了统一错误响应结构、接口文档说明和自动化测试。
 
-- 巩固 Python 面向对象与模块化基础
-- 掌握 FastAPI 后端开发基础流程
-- 完成数据层从 JSON 到 SQLite 的升级
-- 理解并实践 ORM（SQLModel）操作数据库
-- 建立最小可用的接口测试体系
-- 为后续更正规的工程结构改造做准备
+项目当前重点是：
+
+- 巩固 Python 模块化开发能力
+- 掌握 FastAPI 后端接口开发流程
+- 理解请求体、响应体和参数校验
+- 掌握 SQLite 数据库存储
+- 理解 ORM 数据访问方式
+- 掌握 FastAPI 的 APIRouter 路由拆分
+- 掌握 Depends 依赖注入
+- 建立统一错误响应结构
+- 建立最小可用的自动化测试体系
+- 形成更规范的后端项目结构
 
 ---
 
-二、当前已完成内容
+## 2. 技术栈
 
-1. 命令行版本
+当前项目主要使用：
 
-已完成命令行学生信息管理系统，支持：
+- Python
+- FastAPI
+- Pydantic
+- SQLite
+- SQLModel ORM
+- pytest
+- FastAPI TestClient
+- Git / GitHub
+
+---
+
+## 3. 项目功能
+
+### 3.1 命令行版本
+
+命令行版本支持：
 
 - 添加学生
 - 查看所有学生
@@ -34,120 +55,53 @@
 - 删除学生信息
 - 保存并退出
 
-命令行版本当前仍然保留，主要使用：
+命令行版本主要文件：
 
-- "main.py"
-- "cli.py"
-- "cli_service.py"
-- "manager.py"
-- "student.py"
-- "json_storage.py"
-- "data/students.json"
-
----
-
-2. FastAPI 后端版本
-
-已完成基础学生管理接口：
-
-- "GET /students"
-- "GET /students/{student_id}"
-- "POST /students"
-- "PUT /students/{student_id}"
-- "DELETE /students/{student_id}"
-
-当前后端版本已经具备：
-
-- 请求体模型
-- 响应体模型
-- 字段校验
-- 自定义校验逻辑
-- 统一错误响应结构
-- Swagger 接口文档
+- `main.py`
+- `cli.py`
+- `cli_service.py`
+- `manager.py`
+- `student.py`
+- `json_storage.py`
+- `data/students.json`
 
 ---
 
-3. 数据层升级
+### 3.2 FastAPI 后端版本
 
-项目已经完成从 JSON 文件存储 到 SQLite 数据库存储 的升级。
+FastAPI 后端版本支持：
 
-已实现：
-
-- SQLite 表初始化
-- 基于 SQLite 的 CRUD
-- 通过环境变量切换数据库路径
-- ORM 主线接入
-
-当前数据库相关文件包括：
-
-- "db_init.py"
-- "db_storage.py"
-- "db_models.py"
-- "db_orm.py"
-
----
-
-4. ORM 接入
-
-项目当前已经完成基于 SQLModel ORM 的最小 CRUD 闭环，包括：
-
-- 建表
-- 查询全部学生
-- 按学号查询学生
+- 获取学生列表
+- 根据学号查询学生
 - 新增学生
-- 修改学生
-- 删除学生
+- 根据学号修改学生
+- 根据学号删除学生
+- 请求体字段校验
+- 路径参数校验
+- 学生存在性检查
+- 统一错误响应
+- Swagger UI 接口文档
+- OpenAPI JSON 接口总说明书
+- 自动化接口测试
 
-同时，项目已经将 "service.py" 切换到 ORM 主线，并通过服务层完成对象到字典的转换，使 API 层可以平滑接入 ORM。
+当前主要接口：
 
----
-
-5. 统一异常响应
-
-项目当前已经实现统一错误响应结构，错误响应格式为：
-
-- "code"
-- "message"
-- "errors"
-
-已处理的错误类型包括：
-
-- 请求参数校验错误
-- 资源不存在错误
-- 业务逻辑错误（如重复学号）
-
----
-
-6. 自动化测试
-
-项目已经建立最小自动化测试体系，使用：
-
-- "pytest"
-- "FastAPI TestClient"
-
-并实现了测试数据库隔离。当前已覆盖的测试包括：
-
-- 根接口健康检查
-- 查询全部学生成功
-- 创建学生成功
-- 修改学生成功
-- 删除学生成功
-- 重复学号创建失败
-- 修改不存在学生失败
-- 删除不存在学生失败
-
-测试文件：
-
-- "tests/test_api.py"
-
-测试配置文件：
-
-- "pyproject.toml"
+| 方法 | 路径 | 说明 |
+|---|---|---|
+| `GET` | `/` | 根路径健康检查 |
+| `GET` | `/students/` | 获取学生列表 |
+| `POST` | `/students/` | 新增学生 |
+| `GET` | `/students/{student_id}` | 根据学号获取学生 |
+| `PUT` | `/students/{student_id}` | 根据学号修改学生 |
+| `DELETE` | `/students/{student_id}` | 根据学号删除学生 |
 
 ---
 
-三、当前项目结构
+## 4. 项目结构
 
+当前项目结构大致如下：
+
+```text
 student_manager_cli/
 ├─ api.py
 ├─ main.py
@@ -156,122 +110,316 @@ student_manager_cli/
 ├─ manager.py
 ├─ student.py
 ├─ service.py
+├─ dependencies.py
+├─ schemas.py
 ├─ json_storage.py
 ├─ db_storage.py
 ├─ db_models.py
 ├─ db_orm.py
 ├─ db_init.py
 ├─ db_demo.py
+├─ routers/
+│  ├─ __init__.py
+│  └─ students.py
 ├─ tests/
-│  └─ test_api.py
+│  ├─ conftest.py
+│  ├─ test_api.py
+│  ├─ test_student_dependencies.py
+│  └─ test_request_validation.py
 ├─ data/
-│  └─ students.json
+│  ├─ students.json
+│  └─ students.db
 ├─ .gitignore
 ├─ pyproject.toml
 └─ README.md
+```
 
 ---
 
-四、各文件作用说明
+## 5. 核心模块说明
 
-命令行主线
+### 5.1 FastAPI 主线
 
-- "main.py"：命令行程序入口
-- "cli.py"：命令行交互与输入处理
-- "cli_service.py"：命令行服务层
-- "manager.py"：学生对象管理逻辑
-- "student.py"：学生实体类
-- "json_storage.py"：JSON 文件读写
+- `api.py`  
+  FastAPI 应用入口，负责创建 FastAPI 应用、注册路由、配置项目元信息，并实现全局异常处理器。
 
-FastAPI / 数据库主线
+- `routers/students.py`  
+  学生相关接口路由文件，负责定义学生的新增、查询、修改和删除接口。
 
-- "api.py"：FastAPI 应用入口，接口定义、请求响应模型、异常处理
-- "service.py"：服务层，负责业务逻辑组织与 ORM 结果转换
-- "db_storage.py"：早期 SQLite 操作层
-- "db_models.py"：ORM 表模型定义
-- "db_orm.py"：ORM 数据操作层
-- "db_init.py"：数据库初始化脚本
-- "db_demo.py"：数据库相关演示代码
+- `dependencies.py`  
+  FastAPI 依赖函数文件，负责路径参数 `student_id` 的校验，以及根据学号检查学生是否存在。
 
-测试与配置
+- `schemas.py`  
+  Pydantic 模型文件，负责定义请求体模型、响应体模型、错误响应模型，以及接口文档中的示例数据。
 
-- "tests/test_api.py"：接口自动化测试
-- "pyproject.toml"：pytest 配置
-- ".gitignore"：Git 忽略规则
+- `service.py`  
+  业务逻辑层，负责组织学生相关业务逻辑，并对接数据库操作层。
 
 ---
 
-五、如何运行项目
+### 5.2 数据库主线
 
-1. 运行命令行版本
+- `db_models.py`  
+  ORM 表模型定义文件。
+
+- `db_orm.py`  
+  ORM 数据访问层，负责学生数据的增删改查。
+
+- `db_storage.py`  
+  早期 SQLite 数据访问代码，作为数据库学习过程的一部分保留。
+
+- `db_init.py`  
+  数据库初始化脚本，用于创建学生表。
+
+- `db_demo.py`  
+  数据库相关演示代码。
+
+---
+
+### 5.3 命令行主线
+
+- `main.py`  
+  命令行程序入口。
+
+- `cli.py`  
+  命令行交互逻辑。
+
+- `cli_service.py`  
+  命令行业务服务层。
+
+- `manager.py`  
+  学生对象管理逻辑。
+
+- `student.py`  
+  学生实体类。
+
+- `json_storage.py`  
+  JSON 文件读写逻辑。
+
+---
+
+### 5.4 测试主线
+
+- `tests/conftest.py`  
+  pytest 公共测试夹具文件，负责创建测试客户端和隔离测试数据库。
+
+- `tests/test_api.py`  
+  学生接口主流程测试，包括新增、查询、修改、删除和业务错误测试。
+
+- `tests/test_student_dependencies.py`  
+  依赖链测试，主要验证路径参数校验和学生存在性检查。
+
+- `tests/test_request_validation.py`  
+  请求体验证测试，主要验证缺字段、类型错误、范围错误、字符串长度错误和自定义校验错误。
+
+---
+
+## 6. 环境准备
+
+建议使用虚拟环境运行项目。
 
 在项目根目录执行：
 
-python main.py
+```powershell
+python -m venv .venv
+```
+
+激活虚拟环境：
+
+```powershell
+.\.venv\Scripts\Activate.ps1
+```
+
+安装项目依赖：
+
+```powershell
+pip install fastapi uvicorn sqlmodel pytest httpx
+```
+
+如果后续项目中维护了 `requirements.txt`，也可以使用：
+
+```powershell
+pip install -r requirements.txt
+```
 
 ---
 
-2. 初始化 SQLite 数据库
+## 7. 初始化数据库
 
 在项目根目录执行：
 
+```powershell
 python db_init.py
+```
+
+该命令会初始化 SQLite 数据库和学生表。
 
 ---
 
-3. 启动 FastAPI 接口服务
+## 8. 启动项目
 
-在项目根目录执行：
+启动 FastAPI 服务：
 
+```powershell
 uvicorn api:app --reload
+```
 
-启动后可在浏览器访问：
+启动成功后，终端会显示类似：
 
-http://127.0.0.1:8000/docs
+```text
+Uvicorn running on http://127.0.0.1:8000
+```
 
-查看 Swagger 接口文档。
+浏览器访问：
+
+```text
+http://127.0.0.1:8000
+```
+
+根路径返回：
+
+```json
+{
+  "message": "Student Manager API is running"
+}
+```
 
 ---
 
-六、如何运行测试
+## 9. 接口文档
+
+### 9.1 Swagger UI
+
+访问：
+
+```text
+http://127.0.0.1:8000/docs
+```
+
+`/docs` 是 FastAPI 自动生成的可视化接口调试页面，可以查看接口说明、请求参数、请求体示例、响应体示例，并可以直接发送请求进行测试。
+
+---
+
+### 9.2 OpenAPI JSON
+
+访问：
+
+```text
+http://127.0.0.1:8000/openapi.json
+```
+
+`/openapi.json` 是机器可读的接口总说明书，包含接口路径、请求参数、请求体模型、响应模型、错误响应结构等信息。
+
+---
+
+## 10. 统一错误响应
+
+项目当前已经实现统一错误响应结构。
+
+错误响应格式如下：
+
+```json
+{
+  "code": 400,
+  "message": "请求数据不合法。",
+  "errors": [
+    {
+      "field": null,
+      "message": "学号必须是纯数字。"
+    }
+  ]
+}
+```
+
+字段说明：
+
+| 字段 | 含义 |
+|---|---|
+| `code` | HTTP 状态码 |
+| `message` | 错误总说明 |
+| `errors` | 详细错误列表 |
+| `errors[].field` | 出错字段位置 |
+| `errors[].message` | 具体错误原因 |
+
+当前已处理的错误类型包括：
+
+- `400`：请求数据不合法
+- `404`：目标资源不存在
+- `422`：请求参数校验失败
+
+---
+
+## 11. 运行测试
 
 在项目根目录执行：
 
+```powershell
 python -m pytest
+```
 
-或：
+当前预期结果：
 
+```text
+21 passed
+```
+
+也可以使用简洁模式：
+
+```powershell
 python -m pytest -q
+```
 
-当前测试通过 "pyproject.toml" 配置，只收集 "tests" 目录下的测试文件。
+当前测试已经覆盖：
+
+- 根路径健康检查
+- 获取学生列表成功
+- 新增学生成功
+- 修改学生成功
+- 删除学生成功
+- 重复学号新增失败
+- 修改不存在学生失败
+- 删除不存在学生失败
+- 路径参数不是纯数字时返回 400
+- 学号合法但学生不存在时返回 404
+- 请求体缺少字段时返回 422
+- 请求体字段类型错误时返回 422
+- 请求体字段范围错误时返回 422
+- 请求体字符串长度错误时返回 422
+- 自定义字段校验错误时返回 422
+
+---
+
+## 12. 当前项目阶段
+
+当前项目已经完成阶段 4 的主要工程化内容：
+
+- FastAPI 后端接口版本
+- APIRouter 路由拆分
+- Depends 依赖校验
+- SQLite 数据库存储
+- SQLModel ORM 主线接入
+- Pydantic 请求体和响应体模型
+- 统一错误响应结构
+- 全局异常处理器
+- 测试数据库隔离
+- 自动化接口测试
+- `/docs` 接口文档优化
+- `/openapi.json` 接口总说明书优化
+- Git / GitHub 版本管理
 
 ---
 
-七、当前项目特点
+## 13. 学习说明
 
-本项目当前具备以下特点：
+本项目是一个学习型工程项目，目标不是一次性完成复杂系统，而是通过持续迭代逐步掌握：
 
-- 同时保留命令行版本和 FastAPI 版本，便于对比学习
-- 已完成从 JSON 到 SQLite 的数据层演进
-- 已完成 ORM 主线接入
-- 已建立最小测试体系
-- 已实现统一错误响应
-- 已开始进行接口文档收口
-- 正在向更正规的 FastAPI 工程结构演进
+- Python 项目模块化
+- 后端接口设计
+- 数据库访问
+- ORM 使用
+- 接口文档维护
+- 自动化测试
+- Git 版本管理
+- 工程化项目收口
 
----
-
-八、下一步计划
-
-项目下一阶段将继续推进：
-
-- 多文件路由拆分
-- "APIRouter" 路由分组
-- "Depends" 依赖注入
-- 配置分层
-- 日志
-- 数据库会话依赖
-
-目标是逐步把当前项目从“学习型单文件后端”推进到“更规范的工程化 FastAPI 项目”。
-
----
+当前项目已经从最初的命令行版本，逐步演进为一个具备基础工程结构的 FastAPI 后端项目。
