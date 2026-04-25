@@ -125,7 +125,7 @@ class ErrorResponse(BaseModel):
     errors: list[ErrorItem] = Field(default_factory=list,description="详细错误列表")
 
 COMMON_ERROR_RESPONSES = {
-    400:{"model": ErrorResponse,"description":"请求数据不合法。"},
-    404:{"model":ErrorResponse,"description":"目标资源不存在。"},
-    422:{"model":ErrorResponse,"description":"请求参数校检失败。"}
+    400:{"model": ErrorResponse,"description": "请求数据不合法。"},
+    404:{"model": ErrorResponse,"description": "目标资源不存在。"},
+    422:{"model": ErrorResponse,"description": "请求参数校检失败。"}
 }

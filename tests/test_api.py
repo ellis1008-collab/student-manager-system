@@ -1,47 +1,3 @@
-import sqlite3
-
-import pytest
-from fastapi.testclient import TestClient
-
-from api import app
-
-
-@pytest.fixture   ##声明下面的函数是夹具函数：
-def client_with_test_db(tmp_path, monkeypatch):
-    test_db_path = tmp_path / "test_students.db"
-
-    monkeypatch.setenv("STUDENT_DB_PATH", str(test_db_path))
-
-    conn = sqlite3.connect(test_db_path)
-    cursor = conn.cursor()
-
-    cursor.execute("""
-        CREATE TABLE students (
-            id TEXT PRIMARY KEY,
-            name TEXT NOT NULL,
-            age INTEGER NOT NULL,
-            major TEXT NOT NULL,
-            score INTEGER NOT NULL
-        )
-    """)
-
-    cursor.executemany(
-        """
-        INSERT INTO students (id, name, age, major, score)
-        VALUES (?, ?, ?, ?, ?)
-        """,
-        [
-            ("001", "张三", 18, "计算机科学与技术", 95),
-            ("002", "李四", 19, "软件工程", 88),
-        ],
-    )
-
-    conn.commit()
-    conn.close()
-    
-    with TestClient(app) as client:
-        yield client
-
 ##测试根目录：
 def test_root_returns_running_message(client_with_test_db):
     response = client_with_test_db.get("/")
@@ -135,8 +91,11 @@ def test_delete_student_return_200_and_removes_record(client_with_test_db):
     assert len(students) == 1
     assert all(student["id"] != "001" for student in students)
 
-##重复学号新增失败测试：
-def test_create_student_with_duplicate_id_returns_400(client_with_test_db):
+##重复学号新增失败测试(400)：
+def test_create_student_with_duplicate_id_returns_400(
+            client_with_test_db,
+            assert_error_response
+            ):
         duplicate_student = {
             "id" : "001",
             "name" : "新张三",
@@ -146,15 +105,12 @@ def test_create_student_with_duplicate_id_returns_400(client_with_test_db):
         }
         
         response = client_with_test_db.post("/students",json=duplicate_student)
-        assert response.status_code == 400
-        
-        data = response.json()
-        assert data["code"] == 400
-        assert data["message"] == "请求数据不合法。"
-        assert len(data["errors"]) == 1
-        assert data["errors"][0]["field"] is None
-        assert data["errors"][0]["message"] == "学号已存在,不能重复添加。"
-
+        assert_error_response(
+              response=response,
+              status_code=400,
+              top_message="请求数据不合法。",
+              detail_message="学号已存在，不能重复添加。",
+        )
         list_response = client_with_test_db.get("/students")
 
         assert list_response.status_code == 200
@@ -163,8 +119,11 @@ def test_create_student_with_duplicate_id_returns_400(client_with_test_db):
         assert any (student["id"] == "001" 
                     and student["name"] == "张三" for student in students)
         
-##修改不存在学生失败测试：
-def test_update_nonexistent_student_returns_404(client_with_test_db):
+##修改不存在学生失败测试(404)：
+def test_update_nonexistent_student_returns_404(
+            client_with_test_db,
+            assert_error_response,
+            ):
         update_student = {
             "name": "不存在的学生",
             "age":21,
@@ -173,32 +132,32 @@ def test_update_nonexistent_student_returns_404(client_with_test_db):
         }
         response = client_with_test_db.put("/students/999",json=update_student)
 
-        assert response.status_code == 404
-        data = response.json()
-        assert data["code"] == 404
-        assert data["message"] == "目标资源不存在。"
-        assert len(data["errors"]) == 1
-        assert data["errors"][0]["field"] == None
-        assert data["errors"][0]["message"] == "未找到该学号对应的学生。"
-
+        assert_error_response(
+              response=response,
+              status_code=404,
+              top_message="目标资源不存在。",
+              detail_message="未找到该学号对应的学生。",
+        )
+        
         list_response = client_with_test_db.get("/students")
         assert list_response.status_code == 200
         students = list_response.json()
         assert len(students) == 2
 
-##删除不存在学生失败测试：
-def test_delete_nonexistent_student_returns_404(client_with_test_db):
+##删除不存在学生失败测试（404）：
+def test_delete_nonexistent_student_returns_404(
+            client_with_test_db,
+            assert_error_response,
+            ):
             response = client_with_test_db.delete("/students/999")
             
-            assert response.status_code == 404
-
-            data = response.json()
-            assert data["code"] == 404
-            assert data["message"] == "目标资源不存在。"
-            assert len(data["errors"]) == 1
-            assert data["errors"][0]["field"] == None
-            assert data["errors"][0]["message"] == "未找到该学号对应的学生。"
-
+            assert_error_response(
+                  response=response,
+                  status_code=404,
+                  top_message="目标资源不存在。",
+                  detail_message="未找到该学号对应的学生。",
+            )
+            
             list_response = client_with_test_db.get("/students")
             assert list_response.status_code == 200
             students = list_response.json()

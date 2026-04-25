@@ -28,7 +28,7 @@ def get_student_by_id_service(student_id):
 def add_student_service(student_data):
     existing_student = get_student_by_id_orm(student_data["id"])
     if existing_student is not None:
-        return False, "学号已存在,不能重复添加。"
+        return False, "学号已存在，不能重复添加。"
     created_student = add_student_orm(student_data)
     if created_student is not None:
         return True, "新增成功。"

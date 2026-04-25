@@ -33,12 +33,12 @@ def translate_validation_error(error: dict) -> str:
     ctx = error.get("ctx",{})
     msg = error.get("msg","请求参数不合法。")
 
-    if msg.startswith("Value error ,"):
-        msg = msg[len("Value error,"):]
+    if msg.startswith("Value error,"):
+        return msg[len("Value error,"):].strip()
     if error_type == "less_than_equal":
         return f"输入值必须小于等于{ctx.get('le')}。"
     if error_type == "greater_than_equal":
-        return f"输入值必须大于等于 {ctx.get('ge')}。"
+        return f"输入值必须大于等于{ctx.get('ge')}。"
     if error_type == "string_too_short":
         return f"字符串长度不能少于 {ctx.get('min_length')} 个字符。"
     if error_type == "string_too_long":
@@ -78,12 +78,12 @@ async def request_validation_exception_handler(
             )
         )
     payload = ErrorResponse(
-        code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+        code=status.HTTP_422_UNPROCESSABLE_CONTENT,
         message="请求参数校检失败。",   ##（路由前）
         errors=errors,
     )
     return JSONResponse(
-        status_code = status.HTTP_422_UNPROCESSABLE_ENTITY,
+        status_code = status.HTTP_422_UNPROCESSABLE_CONTENT,
         content=payload.model_dump(),
     )
 
