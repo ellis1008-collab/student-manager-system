@@ -453,7 +453,172 @@ python -m pytest -q
 
 ---
 
-## 12. 当前项目阶段
+## 12. Docker 容器化运行
+
+本项目已经支持使用 Docker 构建镜像并运行容器。
+
+Docker 可以将 Python 环境、项目依赖、项目代码和启动命令统一打包，减少不同电脑或服务器环境不一致导致的问题。
+
+---
+
+### 12.1 Docker 相关文件说明
+
+项目根目录下包含以下 Docker 相关文件：
+
+| 文件 | 作用 |
+|---|---|
+| `Dockerfile` | 定义如何构建项目镜像 |
+| `.dockerignore` | 定义构建镜像时需要忽略的文件 |
+
+其中：
+
+- `Dockerfile` 用来告诉 Docker 如何安装依赖、复制代码、启动 FastAPI 服务。
+- `.dockerignore` 用来避免将 `.venv/`、缓存文件、数据库文件、`.env` 等无关或敏感文件复制进镜像。
+
+---
+
+### 12.2 构建 Docker 镜像
+
+在项目根目录执行：
+
+```powershell
+docker build -t student-manager-api:latest .
+```
+
+命令说明：
+
+| 部分 | 含义 |
+|---|---|
+| `docker build` | 构建 Docker 镜像 |
+| `-t student-manager-api:latest` | 给镜像命名为 `student-manager-api`，标签为 `latest` |
+| `.` | 使用当前目录作为构建上下文 |
+
+构建成功后，可以查看本地镜像：
+
+```powershell
+docker images
+```
+
+如果看到类似下面内容，说明镜像构建成功：
+
+```text
+student-manager-api:latest
+```
+
+---
+
+### 12.3 运行 Docker 容器
+
+执行：
+
+```powershell
+docker run -d --name student-manager-api-container -p 8000:8000 student-manager-api:latest
+```
+
+命令说明：
+
+| 部分 | 含义 |
+|---|---|
+| `docker run` | 根据镜像创建并运行容器 |
+| `-d` | 后台运行容器 |
+| `--name student-manager-api-container` | 给容器命名 |
+| `-p 8000:8000` | 将本机 8000 端口映射到容器内部 8000 端口 |
+| `student-manager-api:latest` | 使用该镜像启动容器 |
+
+启动成功后，访问接口文档：
+
+```text
+http://127.0.0.1:8000/docs
+```
+
+---
+
+### 12.4 查看正在运行的容器
+
+```powershell
+docker ps
+```
+
+如果看到：
+
+```text
+student-manager-api-container
+0.0.0.0:8000->8000/tcp
+```
+
+说明容器正在运行，并且端口映射成功。
+
+---
+
+### 12.5 查看容器日志
+
+```powershell
+docker logs student-manager-api-container
+```
+
+如果看到类似：
+
+```text
+Uvicorn running on http://0.0.0.0:8000
+GET /docs HTTP/1.1 200 OK
+GET /openapi.json HTTP/1.1 200 OK
+```
+
+说明 FastAPI 服务已经在 Docker 容器中正常运行。
+
+---
+
+### 12.6 停止并删除容器
+
+停止容器：
+
+```powershell
+docker stop student-manager-api-container
+```
+
+删除容器：
+
+```powershell
+docker rm student-manager-api-container
+```
+
+注意：
+
+```text
+删除容器不会删除镜像。
+```
+
+镜像 `student-manager-api:latest` 仍然保留在本机，可以继续用来重新创建容器。
+
+---
+
+### 12.7 Docker 运行流程总结
+
+完整 Docker 运行流程如下：
+
+```text
+Dockerfile
+→ docker build
+→ 镜像 image
+→ docker run
+→ 容器 container
+→ FastAPI 服务启动
+→ 浏览器访问 /docs
+```
+
+常用命令汇总：
+
+```powershell
+docker build -t student-manager-api:latest .
+docker images
+docker run -d --name student-manager-api-container -p 8000:8000 student-manager-api:latest
+docker ps
+docker logs student-manager-api-container
+docker stop student-manager-api-container
+docker rm student-manager-api-container
+```
+
+## 13. 当前项目阶段
 
 当前项目已经完成阶段 4 的主要工程化内容：
 
@@ -473,7 +638,7 @@ python -m pytest -q
 
 ---
 
-## 13. 学习说明
+## 14. 学习说明
 
 本项目是一个学习型工程项目，目标不是一次性完成复杂系统，而是通过持续迭代逐步掌握：
 
