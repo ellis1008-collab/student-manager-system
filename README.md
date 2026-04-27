@@ -807,7 +807,201 @@ docker rm deploy-check
 docker run -d --name deploy-check -p 127.0.0.1:8000:8000 -e LOG_LEVEL=INFO -v "${PWD}\data:/app/data" student-manager-api:latest
 ```
 
-## 14. 当前项目阶段
+## 14. Docker Compose 启动项目
+
+本项目支持使用 Docker Compose 管理容器启动配置。
+
+Docker Compose 可以把原本较长的 `docker run` 命令整理到 `docker-compose.yml` 文件中，统一管理镜像构建、容器名称、端口映射、环境变量和数据挂载配置。
+
+---
+
+### 14.1 Docker Compose 配置文件
+
+项目根目录下包含：
+
+```text
+→ docker-compose.yml
+```
+
+该文件用于定义 FastAPI 服务的容器运行方式。
+
+当前配置包含：
+
+| 配置项 | 作用 |
+|---|---|
+| `build` | 根据当前目录下的 `Dockerfile` 构建镜像 |
+| `image` | 指定镜像名称 |
+| `container_name` | 指定容器名称 |
+| `ports` | 设置端口映射 |
+| `environment` | 设置环境变量 |
+| `volumes` | 挂载本机 `data` 目录到容器内部 |
+
+---
+
+### 14.2 启动服务
+
+在项目根目录执行：
+
+```powershell
+→ docker compose up -d
+```
+
+含义：
+
+| 部分 | 含义 |
+|---|---|
+| `docker compose` | 使用 Docker Compose |
+| `up` | 根据 `docker-compose.yml` 创建并启动服务 |
+| `-d` | 后台运行容器 |
+
+启动成功后，可以访问：
+
+```text
+→ http://127.0.0.1:8000/docs
+```
+
+---
+
+### 14.3 查看服务状态
+
+```powershell
+→ docker compose ps
+```
+
+如果看到类似：
+
+```text
+→ student-manager-api-compose
+→ 127.0.0.1:8000->8000/tcp
+```
+
+说明容器已经正常运行，并且本机端口已经映射到容器端口。
+
+---
+
+### 14.4 查看服务日志
+
+```powershell
+→ docker compose logs app
+```
+
+正常情况下可以看到类似：
+
+```text
+→ Student Manager API starting...
+→ Uvicorn running on http://0.0.0.0:8000
+```
+
+这说明 FastAPI 服务已经在容器内启动成功。
+
+---
+
+### 14.5 验证环境变量
+
+可以进入容器查看环境变量：
+
+```powershell
+→ docker compose exec app printenv LOG_LEVEL
+→ docker compose exec app printenv STUDENT_DB_PATH
+```
+
+预期输出：
+
+```text
+→ INFO
+→ data/students.db
+```
+
+也可以验证 Python 项目是否真正读取到了配置：
+
+```powershell
+→ docker compose exec app python -c "from config import settings; print(settings.log_level); print(settings.database_path)"
+```
+
+预期输出：
+
+```text
+→ INFO
+→ data/students.db
+```
+
+---
+
+### 14.6 验证 data 目录挂载
+
+执行：
+
+```powershell
+→ docker compose exec app ls -l /app/data
+```
+
+如果能看到：
+
+```text
+→ students.db
+```
+
+说明本机 `data` 目录已经成功挂载到容器内部的 `/app/data`。
+
+这意味着容器读写：
+
+```text
+→ /app/data/students.db
+```
+
+实际就是读写本机项目目录下的：
+
+```text
+→ data/students.db
+```
+
+---
+
+### 14.7 停止并删除 Compose 服务
+
+```powershell
+→ docker compose down
+```
+
+该命令会停止并删除由 Docker Compose 创建的容器和默认网络。
+
+注意：
+
+```text
+→ docker compose down 不会删除本机 data/students.db
+```
+
+因为数据库文件保存在本机 `data` 目录中，不只存在于容器内部。
+
+---
+
+### 14.8 Docker Compose 常用命令汇总
+
+```powershell
+→ docker compose config
+→ docker compose up -d
+→ docker compose ps
+→ docker compose logs app
+→ docker compose exec app printenv LOG_LEVEL
+→ docker compose exec app printenv STUDENT_DB_PATH
+→ docker compose exec app ls -l /app/data
+→ docker compose down
+```
+
+完整运行流程：
+
+```text
+→ 编写 docker-compose.yml
+→ docker compose config 检查配置
+→ docker compose up -d 启动服务
+→ docker compose ps 查看容器状态
+→ docker compose logs app 查看日志
+→ 浏览器访问 /docs
+→ 验证接口
+→ docker compose down 停止并清理容器
+```
+
+## 15. 当前项目阶段
 
 当前项目已经完成阶段 4 的主要工程化内容：
 
@@ -827,7 +1021,7 @@ docker run -d --name deploy-check -p 127.0.0.1:8000:8000 -e LOG_LEVEL=INFO -v "$
 
 ---
 
-## 15. 学习说明
+## 16. 学习说明
 
 本项目是一个学习型工程项目，目标不是一次性完成复杂系统，而是通过持续迭代逐步掌握：
 

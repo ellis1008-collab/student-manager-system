@@ -1,0 +1,12 @@
+services:
+  app:
+    build: .
+    image: student-manager-api:latest
+    container_name: student-manager-api-compose
+    ports: 
+         - "127.0.0.1:8000:8000"
+    environment:
+      LOG_LEVEL: INFO
+      STUDENT_DB_PATH: data/students.db
+    volumes: 
+          - ./data:/app/data 
