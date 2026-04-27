@@ -1009,7 +1009,114 @@ docker compose down
  验证接口
  docker compose down 停止并清理容器
 ```
-## 15. 当前项目阶段
+
+## 15. 大模型 API Key 安全规则
+
+本项目在阶段 6 开始接入大模型 API。
+
+当前实际使用的平台是：
+
+```text
+阿里云百炼 DashScope / Model Studio
+```
+
+当前使用的环境变量名称是：
+
+```text
+DASHSCOPE_API_KEY
+```
+
+项目通过 OpenAI Python SDK 的兼容模式调用百炼模型服务。
+
+---
+
+### 15.1 安全原则
+
+API Key 属于敏感信息，不能直接写入代码、README、测试文件或提交到 GitHub。
+
+禁止这样写：
+
+```python
+api_key = "sk-xxx"
+```
+
+正确做法是从环境变量读取：
+
+```python
+api_key = os.getenv("DASHSCOPE_API_KEY")
+```
+
+---
+
+### 15.2 Windows PowerShell 配置方式
+
+在 Windows PowerShell 中，可以使用下面命令配置用户级环境变量：
+
+```powershell
+setx DASHSCOPE_API_KEY "你的真实百炼API_KEY"
+```
+
+配置完成后，需要重新打开 VS Code 或重新打开终端，让新环境变量生效。
+
+---
+
+### 15.3 检查环境变量是否生效
+
+不要直接打印真实 API Key。
+
+可以使用下面命令安全检查是否已经配置：
+
+```powershell
+python -c "import os; print('DASHSCOPE_API_KEY 已配置' if os.getenv('DASHSCOPE_API_KEY') else 'DASHSCOPE_API_KEY 未配置')"
+```
+
+预期输出：
+
+```text
+DASHSCOPE_API_KEY 已配置
+```
+
+---
+
+### 15.4 本项目的大模型 Demo
+
+项目根目录下包含：
+
+```text
+openai_demo.py
+```
+
+该文件用于验证 Python 项目是否可以通过 OpenAI 兼容接口调用阿里云百炼模型。
+
+运行方式：
+
+```powershell
+python openai_demo.py
+```
+
+如果配置正确，会看到类似输出：
+
+```text
+1. 程序开始运行
+2. DASHSCOPE_API_KEY 已读取
+3. 正在创建百炼 OpenAI 兼容 client
+4. 正在发送请求，请等待...
+5. 请求成功，模型返回：
+...
+```
+
+---
+
+### 15.5 注意事项
+
+- 不要把真实 API Key 发到聊天窗口。
+- 不要把真实 API Key 写进代码。
+- 不要把真实 API Key 写进 README。
+- 不要把真实 API Key 提交到 GitHub。
+- 如果使用 `.env` 文件保存本地配置，必须确保 `.env` 已经被 `.gitignore` 忽略。
+- `.env.example` 只能写示例变量名，不能写真实 Key。
+
+## 16. 当前项目阶段
 
 当前项目已经完成阶段 5 的主要部署基础内容。
 
@@ -1054,7 +1161,7 @@ docker compose up -d
 http://127.0.0.1:8000/docs
 ```
 
-## 16. 学习说明
+## 17. 学习说明
 
 本项目是一个学习型工程项目，目标不是一次性完成复杂系统，而是通过持续迭代逐步掌握：
 
