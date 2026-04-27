@@ -16,12 +16,19 @@ def get_database_url():
     db_path = get_db_path()
     return f"sqlite:///{db_path}"
 
-##获取连接（连接管理池）
+
 def get_engine():
     return create_engine(get_database_url(),echo=False)
 
-##连接数据库文件，执行SQL语句：
+
 def create_db_and_tables():
+    
+    db_path = get_db_path()
+    db_dir = os.path.dirname(db_path)
+
+    if db_dir:
+        os.makedirs(db_dir,exist_ok=True)
+        
     engine = get_engine()
 
     SQLModel.metadata.create_all(engine)   ##SQL语句是由SQLAC根据matadata中的SQLModel模型信息生成的，engine传给数据库引擎来执行

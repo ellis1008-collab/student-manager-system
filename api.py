@@ -6,8 +6,10 @@ from routers.students import router as students_router
 from schemas import ErrorItem, ErrorResponse
 from config import settings
 from logging_config import logger, setup_logging
+from db_orm import create_db_and_tables
 
 setup_logging()
+create_db_and_tables()
 logger.info("Student Manager API starting...")
 
 app = FastAPI(

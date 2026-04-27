@@ -618,7 +618,196 @@ docker stop student-manager-api-container
 docker rm student-manager-api-container
 ```
 
-## 13. 当前项目阶段
+## 13. Docker 部署前检查与数据持久化
+
+本项目在 Docker 容器中运行时，支持通过环境变量控制运行配置，并支持将本机 `data` 目录挂载到容器内部，实现 SQLite 数据库文件持久化。
+
+---
+
+### 13.1 环境变量配置
+
+项目通过 `config.py` 读取环境变量：
+
+| 环境变量 | 默认值 | 作用 |
+|---|---|---|
+| `STUDENT_DB_PATH` | `data/students.db` | 设置学生数据库文件路径 |
+| `LOG_LEVEL` | `INFO` | 设置日志输出等级 |
+
+示例：
+
+```powershell
+docker run -d --name student-manager-api-container -p 8000:8000 -e LOG_LEVEL=INFO student-manager-api:latest
+```
+
+其中：
+
+```text
+-e LOG_LEVEL=INFO
+```
+
+表示向容器传入日志等级配置。
+
+---
+
+### 13.2 容器内数据库自动初始化
+
+项目启动时会自动创建数据库目录和数据表。
+
+启动流程包括：
+
+```text
+FastAPI 启动
+→ 读取配置
+→ 创建 data 目录
+→ 创建 students 表
+→ 启动接口服务
+```
+
+这样可以避免 Docker 容器中出现：
+
+```text
+sqlite3.OperationalError: no such table: students
+```
+
+即使容器中没有提前准备好的 `students.db` 文件，项目也可以在启动时自动初始化数据库结构。
+
+---
+
+### 13.3 容器数据丢失问题
+
+默认情况下，如果数据库文件只保存在容器内部：
+
+```text
+/app/data/students.db
+```
+
+那么删除容器后，容器内部的数据也会丢失。
+
+区别如下：
+
+| 操作 | 数据是否保留 |
+|---|---|
+| `docker stop 容器名` | 保留 |
+| `docker start 容器名` | 保留 |
+| `docker rm 容器名` | 容器内部数据丢失 |
+
+因此，重要数据不应该只保存在容器内部。
+
+---
+
+### 13.4 挂载 data 目录实现数据持久化
+
+推荐在运行容器时，将本机项目目录下的 `data` 目录挂载到容器内部：
+
+```powershell
+docker run -d --name data-persist-test -p 8000:8000 -v "${PWD}\data:/app/data" student-manager-api:latest
+```
+
+其中：
+
+| 部分 | 含义 |
+|---|---|
+| `-v` | 挂载目录 |
+| `${PWD}\data` | 本机当前项目下的 `data` 目录 |
+| `/app/data` | 容器内部的 `data` 目录 |
+
+挂载后：
+
+```text
+容器读写 /app/data/students.db
+实际就是读写本机 data/students.db
+```
+
+这样即使删除容器，数据库文件仍然保留在本机项目的 `data` 目录中。
+
+---
+
+### 13.5 更安全的本地端口绑定
+
+本地开发和部署前检查时，推荐使用：
+
+```powershell
+-p 127.0.0.1:8000:8000
+```
+
+完整示例：
+
+```powershell
+docker run -d --name deploy-check -p 127.0.0.1:8000:8000 -e LOG_LEVEL=INFO -v "${PWD}\data:/app/data" student-manager-api:latest
+```
+
+含义：
+
+```text
+只允许本机通过 127.0.0.1:8000 访问服务
+不主动暴露给局域网其他设备
+```
+
+访问地址：
+
+```text
+http://127.0.0.1:8000/docs
+```
+
+---
+
+### 13.6 Docker 部署前检查流程
+
+部署前可以按以下流程检查项目是否正常：
+
+```powershell
+python -m pytest
+docker build -t student-manager-api:latest .
+docker images
+docker rm -f deploy-check
+docker run -d --name deploy-check -p 127.0.0.1:8000:8000 -e LOG_LEVEL=INFO -v "${PWD}\data:/app/data" student-manager-api:latest
+docker ps
+docker logs deploy-check
+```
+
+然后浏览器访问：
+
+```text
+http://127.0.0.1:8000/docs
+```
+
+至少检查：
+
+```text
+GET /students/
+POST /students/
+```
+
+检查完成后，停止并删除检查容器：
+
+```powershell
+docker stop deploy-check
+docker rm deploy-check
+```
+
+---
+
+### 13.7 Docker 运行配置总结
+
+完整链路如下：
+
+```text
+读取环境变量
+→ 自动初始化数据库
+→ 挂载 data 目录
+→ 启动 FastAPI 容器
+→ 访问 /docs
+→ 验证接口
+→ 停止并删除检查容器
+```
+
+推荐的本地部署前检查命令：
+
+```powershell
+docker run -d --name deploy-check -p 127.0.0.1:8000:8000 -e LOG_LEVEL=INFO -v "${PWD}\data:/app/data" student-manager-api:latest
+```
+
+## 14. 当前项目阶段
 
 当前项目已经完成阶段 4 的主要工程化内容：
 
@@ -638,7 +827,7 @@ docker rm student-manager-api-container
 
 ---
 
-## 14. 学习说明
+## 15. 学习说明
 
 本项目是一个学习型工程项目，目标不是一次性完成复杂系统，而是通过持续迭代逐步掌握：
 
