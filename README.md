@@ -39,7 +39,8 @@
 - pytest
 - FastAPI TestClient
 - Git / GitHub
-
+- Docker
+- Docker Compose
 ---
 
 ## 3. 项目功能
@@ -112,6 +113,8 @@ student_manager_cli/
 ├─ service.py
 ├─ dependencies.py
 ├─ schemas.py
+├─ config.py
+├─ logging_config.py
 ├─ json_storage.py
 ├─ db_storage.py
 ├─ db_models.py
@@ -129,7 +132,13 @@ student_manager_cli/
 ├─ data/
 │  ├─ students.json
 │  └─ students.db
+├─ Dockerfile
+├─ docker-compose.yml
+├─ .dockerignore
+├─ .env.example
 ├─ .gitignore
+├─ .cursorignore
+├─ requirements.txt
 ├─ pyproject.toml
 └─ README.md
 ```
@@ -820,7 +829,7 @@ Docker Compose 可以把原本较长的 `docker run` 命令整理到 `docker-com
 项目根目录下包含：
 
 ```text
-→ docker-compose.yml
+docker-compose.yml
 ```
 
 该文件用于定义 FastAPI 服务的容器运行方式。
@@ -843,7 +852,7 @@ Docker Compose 可以把原本较长的 `docker run` 命令整理到 `docker-com
 在项目根目录执行：
 
 ```powershell
-→ docker compose up -d
+docker compose up -d
 ```
 
 含义：
@@ -857,7 +866,7 @@ Docker Compose 可以把原本较长的 `docker run` 命令整理到 `docker-com
 启动成功后，可以访问：
 
 ```text
-→ http://127.0.0.1:8000/docs
+http://127.0.0.1:8000/docs
 ```
 
 ---
@@ -865,14 +874,14 @@ Docker Compose 可以把原本较长的 `docker run` 命令整理到 `docker-com
 ### 14.3 查看服务状态
 
 ```powershell
-→ docker compose ps
+docker compose ps
 ```
 
 如果看到类似：
 
 ```text
-→ student-manager-api-compose
-→ 127.0.0.1:8000->8000/tcp
+student-manager-api-compose
+127.0.0.1:8000->8000/tcp
 ```
 
 说明容器已经正常运行，并且本机端口已经映射到容器端口。
@@ -882,14 +891,14 @@ Docker Compose 可以把原本较长的 `docker run` 命令整理到 `docker-com
 ### 14.4 查看服务日志
 
 ```powershell
-→ docker compose logs app
+docker compose logs app
 ```
 
 正常情况下可以看到类似：
 
 ```text
-→ Student Manager API starting...
-→ Uvicorn running on http://0.0.0.0:8000
+Student Manager API starting...
+Uvicorn running on http://0.0.0.0:8000
 ```
 
 这说明 FastAPI 服务已经在容器内启动成功。
@@ -901,28 +910,28 @@ Docker Compose 可以把原本较长的 `docker run` 命令整理到 `docker-com
 可以进入容器查看环境变量：
 
 ```powershell
-→ docker compose exec app printenv LOG_LEVEL
-→ docker compose exec app printenv STUDENT_DB_PATH
+docker compose exec app printenv LOG_LEVEL
+docker compose exec app printenv STUDENT_DB_PATH
 ```
 
 预期输出：
 
 ```text
-→ INFO
-→ data/students.db
+INFO
+data/students.db
 ```
 
 也可以验证 Python 项目是否真正读取到了配置：
 
 ```powershell
-→ docker compose exec app python -c "from config import settings; print(settings.log_level); print(settings.database_path)"
+docker compose exec app python -c "from config import settings; print(settings.log_level); print(settings.database_path)"
 ```
 
 预期输出：
 
 ```text
-→ INFO
-→ data/students.db
+INFO
+data/students.db
 ```
 
 ---
@@ -932,13 +941,13 @@ Docker Compose 可以把原本较长的 `docker run` 命令整理到 `docker-com
 执行：
 
 ```powershell
-→ docker compose exec app ls -l /app/data
+docker compose exec app ls -l /app/data
 ```
 
 如果能看到：
 
 ```text
-→ students.db
+students.db
 ```
 
 说明本机 `data` 目录已经成功挂载到容器内部的 `/app/data`。
@@ -946,13 +955,13 @@ Docker Compose 可以把原本较长的 `docker run` 命令整理到 `docker-com
 这意味着容器读写：
 
 ```text
-→ /app/data/students.db
+/app/data/students.db
 ```
 
 实际就是读写本机项目目录下的：
 
 ```text
-→ data/students.db
+data/students.db
 ```
 
 ---
@@ -960,7 +969,7 @@ Docker Compose 可以把原本较长的 `docker run` 命令整理到 `docker-com
 ### 14.7 停止并删除 Compose 服务
 
 ```powershell
-→ docker compose down
+docker compose down
 ```
 
 该命令会停止并删除由 Docker Compose 创建的容器和默认网络。
@@ -968,7 +977,7 @@ Docker Compose 可以把原本较长的 `docker run` 命令整理到 `docker-com
 注意：
 
 ```text
-→ docker compose down 不会删除本机 data/students.db
+docker compose down 不会删除本机 data/students.db
 ```
 
 因为数据库文件保存在本机 `data` 目录中，不只存在于容器内部。
@@ -978,32 +987,33 @@ Docker Compose 可以把原本较长的 `docker run` 命令整理到 `docker-com
 ### 14.8 Docker Compose 常用命令汇总
 
 ```powershell
-→ docker compose config
-→ docker compose up -d
-→ docker compose ps
-→ docker compose logs app
-→ docker compose exec app printenv LOG_LEVEL
-→ docker compose exec app printenv STUDENT_DB_PATH
-→ docker compose exec app ls -l /app/data
-→ docker compose down
+docker compose config
+docker compose up -d
+docker compose ps
+docker compose logs app
+docker compose exec app printenv LOG_LEVEL
+docker compose exec app printenv STUDENT_DB_PATH
+docker compose exec app ls -l /app/data
+docker compose down
 ```
 
 完整运行流程：
 
 ```text
-→ 编写 docker-compose.yml
-→ docker compose config 检查配置
-→ docker compose up -d 启动服务
-→ docker compose ps 查看容器状态
-→ docker compose logs app 查看日志
-→ 浏览器访问 /docs
-→ 验证接口
-→ docker compose down 停止并清理容器
+编写 docker-compose.yml
+ docker compose config 检查配置
+ docker compose up -d 启动服务
+ docker compose ps 查看容器状态
+ docker compose logs app 查看日志
+ 浏览器访问 /docs
+ 验证接口
+ docker compose down 停止并清理容器
 ```
-
 ## 15. 当前项目阶段
 
-当前项目已经完成阶段 4 的主要工程化内容：
+当前项目已经完成阶段 5 的主要部署基础内容。
+
+已完成内容包括：
 
 - FastAPI 后端接口版本
 - APIRouter 路由拆分
@@ -1018,8 +1028,31 @@ Docker Compose 可以把原本较长的 `docker run` 命令整理到 `docker-com
 - `/docs` 接口文档优化
 - `/openapi.json` 接口总说明书优化
 - Git / GitHub 版本管理
+- `.gitignore` 与 `.dockerignore` 安全基线
+- `.env.example` 配置模板
+- 环境变量配置读取
+- 日志配置基础接入
+- Dockerfile 容器化构建
+- Docker 容器运行验证
+- Docker 数据持久化验证
+- Docker Compose 启动配置
+- Docker Compose 环境变量和挂载验证
+- 部署前本地启动验证
+- 部署前 Docker Compose 启动验证
 
----
+阶段 5 的核心目标是：让项目从“能在本地运行的 FastAPI 项目”，推进到“具备基础部署准备能力的后端工程项目”。
+
+当前推荐运行方式：
+
+```powershell
+docker compose up -d
+```
+
+当前推荐接口访问地址：
+
+```text
+http://127.0.0.1:8000/docs
+```
 
 ## 16. 学习说明
 
