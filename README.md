@@ -1116,6 +1116,53 @@ python openai_demo.py
 - 如果使用 `.env` 文件保存本地配置，必须确保 `.env` 已经被 `.gitignore` 忽略。
 - `.env.example` 只能写示例变量名，不能写真实 Key。
 
+### 15.6 AI 接口测试与 Mock 机制
+
+本项目为 `/ai/reply` 接口补充了自动化测试，并通过 Mock 机制避免测试时真实调用阿里云百炼大模型。
+
+测试文件：
+
+```text
+tests/test_ai.py
+```
+
+当前 AI 接口测试覆盖内容：
+
+- `/ai/reply` 正常返回时，接口返回 `200`
+- `generate_ai_reply()` 抛出 `RuntimeError` 时，接口返回 `502`
+- `generate_ai_reply()` 抛出 `ValueError` 时，接口返回 `400`
+- `prompt` 为空字符串时，接口返回 `422`
+- `prompt` 超过最大长度时，接口返回 `422`
+- 测试期间禁止真实创建百炼客户端，避免误调用真实 API
+
+测试中使用了 `monkeypatch` 临时替换：
+
+```text
+routers.ai.generate_ai_reply
+```
+
+这样可以保证测试 `/ai/reply` 路由逻辑时，不会真实请求百炼模型服务。
+
+同时，测试中还使用了 `pytest.fixture(autouse=True)` 自动阻止真实创建百炼客户端：
+
+```text
+ai_client.get_bailian_client
+```
+
+如果测试期间误调用真实百炼客户端创建函数，测试会主动失败，从而防止消耗 API 额度。
+
+运行测试：
+
+```powershell
+python -m pytest
+```
+
+当前预期测试结果：
+
+```text
+27 passed
+```
+
 ## 16. AI 接口：百炼大模型回复接口
 
 本项目已经接入阿里云百炼平台的大模型能力，并通过 OpenAI 兼容接口进行调用。
