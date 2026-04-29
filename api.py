@@ -3,6 +3,7 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 
 from routers.students import router as students_router
+from routers.ai import router as ai_router
 from schemas import ErrorItem, ErrorResponse
 from config import settings
 from logging_config import logger, setup_logging
@@ -18,6 +19,7 @@ app = FastAPI(
     version=settings.app_version,
     )
 app.include_router(students_router)
+app.include_router(ai_router)
 
 ##格式化错误位置信息：
 def format_error_location(loc) -> str|None:

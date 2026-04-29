@@ -1116,7 +1116,71 @@ python openai_demo.py
 - 如果使用 `.env` 文件保存本地配置，必须确保 `.env` 已经被 `.gitignore` 忽略。
 - `.env.example` 只能写示例变量名，不能写真实 Key。
 
-## 16. 当前项目阶段
+## 16. AI 接口：百炼大模型回复接口
+
+本项目已经接入阿里云百炼平台的大模型能力，并通过 OpenAI 兼容接口进行调用。
+
+这里的 OpenAI 兼容接口，意思是：虽然当前实际使用的是阿里云百炼模型，但代码调用方式兼容 OpenAI Python SDK 的接口格式。
+
+当前 AI 调用逻辑已经从临时演示脚本中拆分出来，封装到了 `ai_client.py` 中，并通过 FastAPI 路由暴露为正式接口。
+
+### 16.1 相关文件
+
+| 文件 | 作用 |
+|---|---|
+| `ai_client.py` | 封装百炼 OpenAI 兼容客户端，负责读取 `DASHSCOPE_API_KEY` 并调用模型 |
+| `openai_demo.py` | 命令行演示脚本，用于单独测试大模型调用是否正常 |
+| `routers/ai.py` | AI 接口路由文件，提供 `/ai/reply` 接口 |
+| `tests/test_ai.py` | AI 接口测试文件，使用 `monkeypatch` 避免测试时真实调用大模型 |
+
+### 16.2 AI 接口说明
+
+当前新增接口：
+
+```text
+POST /ai/reply
+```
+
+请求体示例：
+
+```json
+{
+  "prompt": "请用一句话介绍 FastAPI。"
+}
+```
+
+响应体示例：
+
+```json
+{
+  "reply": "FastAPI 是一个用于构建高性能 Python Web API 的现代框架。"
+}
+```
+
+### 16.3 环境变量要求
+
+运行 AI 接口前，需要配置百炼 API Key：
+
+```powershell
+setx DASHSCOPE_API_KEY "你的真实百炼API_KEY"
+```
+
+配置完成后，需要重新打开终端，使环境变量生效。
+
+检查是否配置成功：
+
+```powershell
+python -c "import os; print('DASHSCOPE_API_KEY 已配置' if os.getenv('DASHSCOPE_API_KEY') else 'DASHSCOPE_API_KEY 未配置')"
+```
+
+注意：
+
+- 不要把真实 API Key 写进代码。
+- 不要把真实 API Key 写进 `README.md`。
+- 不
+
+
+## 17. 当前项目阶段
 
 当前项目已经完成阶段 5 的主要部署基础内容。
 
@@ -1161,7 +1225,7 @@ docker compose up -d
 http://127.0.0.1:8000/docs
 ```
 
-## 17. 学习说明
+## 18. 学习说明
 
 本项目是一个学习型工程项目，目标不是一次性完成复杂系统，而是通过持续迭代逐步掌握：
 
