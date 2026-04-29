@@ -19,11 +19,15 @@ def block_real_bailian_client(monkeypatch):
     )
 
 
-
-##测试发送请求与接收响应都通过（假调用，直接手写调用过程）：
+##原来：测试接口是否直接把 prompt 传给generate_ai_reply:
+##现在：测试是否成功使用了 prompt 模板，以及用户问题是否在：
 def test_ai_reply_success(monkeypatch):
     def fake_generate_ai_reply(prompt: str) -> str:
-        assert prompt == "请用一句话介绍 FastAPI。"
+        
+        assert "请用一句话介绍 FastAPI。" in prompt
+        assert "学生信息管理系统" in prompt
+        assert "Python 后端开发学习助手" in prompt
+
         return "这是模拟的大模型回复。"
 
     monkeypatch.setattr(

@@ -1,6 +1,7 @@
 from fastapi import APIRouter, HTTPException, status
 from pydantic import BaseModel, Field
 from ai_client import generate_ai_reply
+from prompts import build_student_manager_prompt
 
 router = APIRouter(
     prefix="/ai",
@@ -28,8 +29,9 @@ class AIReplyResponse(BaseModel):
     description="接收用户输入的 prompt, 调用 ai_client.py 中封装的百炼模型客户端，并返回模型回复。",
     )
 def create_ai_reply(request:AIReplyRequest):
+    final_prompt = build_student_manager_prompt(request.prompt)
     try:
-        reply=generate_ai_reply(request.prompt)
+        reply=generate_ai_reply(final_prompt)
         return AIReplyResponse(reply=reply)
     except ValueError as e:
         raise HTTPException(

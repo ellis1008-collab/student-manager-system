@@ -1163,6 +1163,61 @@ python -m pytest
 27 passed
 ```
 
+### 15.7 Prompt 工程基础
+
+本项目在 AI 接口中加入了 Prompt 工程基础设计。
+
+Prompt 是发送给大模型的指令文本。  
+在本项目中，用户原始输入不会直接发送给大模型，而是会先通过 `prompts.py` 进行包装，生成包含项目背景、角色设定、回答要求和用户问题的完整 Prompt。
+
+当前新增文件：
+
+| 文件 | 作用 |
+|---|---|
+| `prompts.py` | 集中管理项目中的大模型 Prompt 模板 |
+| `tests/test_prompts.py` | 测试 Prompt 模板是否包含必要内容 |
+
+当前 Prompt 构建函数：
+
+`build_student_manager_prompt(user_prompt: str) -> str`
+
+该函数的作用是：
+
+- 接收用户原始问题
+- 加入学生信息管理系统项目背景
+- 加入 Python 后端开发学习助手角色
+- 加入中文回答、结合项目、不编造不存在功能等约束
+- 返回最终发送给大模型的完整 Prompt
+
+当前调用链路：
+
+- `openai_demo.py` 会调用 `build_student_manager_prompt()` 构建 Prompt
+- `/ai/reply` 接口也会调用 `build_student_manager_prompt()` 构建 Prompt
+- `ai_client.py` 只负责调用百炼模型，不负责拼接 Prompt
+
+这样拆分后，项目结构更清晰：
+
+- `prompts.py` 负责提示词模板
+- `ai_client.py` 负责模型调用
+- `routers/ai.py` 负责接口请求和响应
+- `tests/test_prompts.py` 负责 Prompt 模板测试
+
+当前 Prompt 测试覆盖内容：
+
+- 最终 Prompt 必须包含用户原始问题
+- 最终 Prompt 必须包含学生信息管理系统项目背景
+- 最终 Prompt 必须包含 Python 后端开发学习助手角色
+- 最终 Prompt 必须包含 FastAPI、阿里云百炼大模型 API 等当前项目上下文
+- 最终 Prompt 首尾不能有多余空白
+
+运行测试：
+
+`python -m pytest`
+
+当前预期测试结果：
+
+`30 passed`
+
 ## 16. AI 接口：百炼大模型回复接口
 
 本项目已经接入阿里云百炼平台的大模型能力，并通过 OpenAI 兼容接口进行调用。
