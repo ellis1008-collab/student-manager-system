@@ -4,7 +4,7 @@ import ai_client
 from fastapi.testclient import TestClient
 
 from api import app
-
+from prompts import build_student_advice_prompt
 
 client = TestClient(app)
 
@@ -142,3 +142,67 @@ def test_ai_tests_block_real_bailian_client():
         ai_client.get_bailian_client()
 
     assert "测试期间不应该真实创建百炼客户端" in str(exc_info.value)
+
+##测试根据已有学生生成学习建议成功：
+def test_create_student_advice_success(client_with_test_db,monkeypatch):
+    def fake_generate_ai_reply(prompt: str) -> str:
+        assert prompt == build_student_advice_prompt(
+            name="张三",
+            major="计算机科学与技术",
+            score=95,
+        )
+        return "建议张三继续巩固计算机专业基础。"
+    monkeypatch.setattr(
+        "routers.ai.generate_ai_reply",
+        fake_generate_ai_reply,
+    )
+    response=client_with_test_db.post("/ai/students/001/advice")
+    assert response.status_code == 200
+    assert response.json() == {"advice":"建议张三继续巩固计算机专业基础。"}
+
+##测试根据学生生成学习建议时，学号格式不合法返回400：
+def test_create_student_advice_invalid_student_id_return_400(
+    client_with_test_db,
+    monkeypatch,
+    assert_error_response,      
+):
+    def fake_generate_ai_reply(prompt: str) -> str:
+        raise AssertionError("学号格式不合法时，不应该调用大模型。")
+    
+    monkeypatch.setattr(
+        "routers.ai.generate_ai_reply",
+        fake_generate_ai_reply,
+    )
+
+    response=client_with_test_db.post("/ai/students/not-exist/advice")
+
+    assert_error_response(
+        response=response,
+        status_code=400,
+        top_message="请求数据不合法。",
+        detail_message="学号必须是纯数字。",
+    )
+
+##测试根据学生生成学习建议时，学生不存在返回404：
+def test_create_student_advice_not_found_returns_404(
+        client_with_test_db,
+        monkeypatch,
+        assert_error_response,
+):
+    def fake_generate_ai_reply(prompt:str) -> str:
+        raise AssertionError("学生不存在时，不应该调用大模型。")
+    
+    monkeypatch.setattr(
+        "routers.ai.generate_ai_reply",
+        fake_generate_ai_reply,
+    )
+
+    response=client_with_test_db.post("/ai/students/999999/advice")
+
+    assert_error_response(
+        response=response,
+        status_code=404,
+        top_message="目标资源不存在。",
+        detail_message="未找到该学号对应的学生。",
+    )  
+
