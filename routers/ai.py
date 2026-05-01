@@ -1,32 +1,16 @@
 from fastapi import APIRouter, HTTPException, status
-from pydantic import BaseModel, Field
+
 from ai_client import generate_ai_reply
 from prompts import build_student_manager_prompt, build_student_advice_prompt
 from dependencies import StudentDepends
+from schemas import AIReplyRequest, AIReplyResponse, StudentAdviceResponse
 
 router = APIRouter(
     prefix="/ai",
     tags=["ai"],
 )
 
-##模型请求体模型：
-class AIReplyRequest(BaseModel):
-    prompt:str = Field(
-        min_length=1,
-        max_length=500,
-        description="用户输入给大模型的问题或指令",
-        examples=["请用一句话介绍 FastAPI。"],
-    )
 
-##模型响应体模型：
-class AIReplyResponse(BaseModel):
-    reply: str = Field(
-        description="大模型返回的回复内容"
-    )
-
-##学生建议响应模型：
-class StudentAdviceResponse(BaseModel):
-    advice: str = Field(description="根据学生信息生成的学习建议")
 
 ##AI Python 后端开发助手接口：
 @router.post(

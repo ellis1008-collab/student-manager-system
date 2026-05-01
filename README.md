@@ -1,8 +1,8 @@
-# 学生信息管理系统
+﻿# 学生信息管理系统
 
-这是一个基于 Python、FastAPI、SQLite 和 SQLModel ORM 实现的学生信息管理系统项目。
+这是一个基于 Python、FastAPI、SQLite、SQLModel ORM、Docker 和阿里云百炼 DashScope 实现的学生信息管理系统项目。
 
-项目最初是一个命令行学生信息管理系统，后续逐步演进为具备后端接口、数据库存储、ORM 操作、统一错误响应、接口文档和自动化测试的学习型后端工程项目。
+项目最初是一个命令行学生信息管理系统，后续逐步演进为具备后端接口、数据库存储、ORM 操作、统一错误响应、接口文档、自动化测试、Docker 容器化运行和大模型接口能力的学习型后端工程项目。
 
 ---
 
@@ -10,7 +10,7 @@
 
 本项目用于管理学生信息，支持学生数据的新增、查询、修改和删除。
 
-当前项目同时保留了早期命令行版本，并已经完成 FastAPI 后端接口版本。后端版本已经接入 SQLite 数据库和 ORM 操作，并补充了统一错误响应结构、接口文档说明和自动化测试。
+当前项目同时保留了早期命令行版本，并已经完成 FastAPI 后端接口版本。后端版本已经接入 SQLite 数据库和 SQLModel ORM 操作，并补充了统一错误响应结构、接口文档说明、自动化测试、Docker Compose 启动配置和大模型 API 接入能力。
 
 项目当前重点是：
 
@@ -23,6 +23,10 @@
 - 掌握 Depends 依赖注入
 - 建立统一错误响应结构
 - 建立最小可用的自动化测试体系
+- 掌握 Docker 基础容器化运行
+- 理解环境变量和 API Key 安全配置
+- 初步接入大模型 API
+- 建立 Prompt 模板和 AI 接口测试基础
 - 形成更规范的后端项目结构
 
 ---
@@ -38,9 +42,12 @@
 - SQLModel ORM
 - pytest
 - FastAPI TestClient
+- OpenAI Python SDK 兼容接口
+- 阿里云百炼 DashScope
 - Git / GitHub
 - Docker
 - Docker Compose
+
 ---
 
 ## 3. 项目功能
@@ -98,6 +105,27 @@ FastAPI 后端版本支持：
 
 ---
 
+### 3.3 大模型接口版本
+
+项目已经接入阿里云百炼 DashScope，并通过 OpenAI 兼容接口调用大模型。
+
+当前 AI 接口：
+
+| 方法 | 路径 | 说明 |
+|---|---|---|
+| `POST` | `/ai/reply` | 调用百炼模型生成回复 |
+| `POST` | `/ai/students/{student_id}/advice` | 根据学生信息生成学习建议 |
+
+AI 接口相关能力：
+
+- 从环境变量读取 `DASHSCOPE_API_KEY`
+- 使用 `ai_client.py` 封装模型调用逻辑
+- 使用 `prompts.py` 统一管理 Prompt 模板
+- 使用 Mock 机制测试 AI 接口，避免测试时真实调用大模型
+- 支持 `/docs` 页面直接测试 AI 接口
+
+---
+
 ## 4. 项目结构
 
 当前项目结构大致如下：
@@ -121,12 +149,18 @@ student_manager_cli/
 ├─ db_orm.py
 ├─ db_init.py
 ├─ db_demo.py
+├─ ai_client.py
+├─ openai_demo.py
+├─ prompts.py
 ├─ routers/
 │  ├─ __init__.py
-│  └─ students.py
+│  ├─ students.py
+│  └─ ai.py
 ├─ tests/
 │  ├─ conftest.py
 │  ├─ test_api.py
+│  ├─ test_ai.py
+│  ├─ test_prompts.py
 │  ├─ test_student_dependencies.py
 │  └─ test_request_validation.py
 ├─ data/
@@ -143,83 +177,112 @@ student_manager_cli/
 └─ README.md
 ```
 
+说明：
+
+- `data/students.json` 是早期命令行版本使用的演示数据文件。
+- `data/students.db` 是本地 SQLite 数据库文件，通常不应该提交到 GitHub。
+- `.env` 用于保存本地真实配置，不应该提交到 GitHub。
+- `.env.example` 用于说明项目需要哪些环境变量，可以提交到 GitHub。
+
 ---
 
 ## 5. 核心模块说明
 
 ### 5.1 FastAPI 主线
 
-- `api.py`  
+- `api.py`
   FastAPI 应用入口，负责创建 FastAPI 应用、注册路由、配置项目元信息，并实现全局异常处理器。
 
-- `routers/students.py`  
+- `routers/students.py`
   学生相关接口路由文件，负责定义学生的新增、查询、修改和删除接口。
 
-- `dependencies.py`  
+- `routers/ai.py`
+  AI 相关接口路由文件，负责定义 `/ai/reply` 和 `/ai/students/{student_id}/advice` 接口。
+
+- `dependencies.py`
   FastAPI 依赖函数文件，负责路径参数 `student_id` 的校验，以及根据学号检查学生是否存在。
 
-- `schemas.py`  
+- `schemas.py`
   Pydantic 模型文件，负责定义请求体模型、响应体模型、错误响应模型，以及接口文档中的示例数据。
 
-- `service.py`  
+- `service.py`
   业务逻辑层，负责组织学生相关业务逻辑，并对接数据库操作层。
 
 ---
 
 ### 5.2 数据库主线
 
-- `db_models.py`  
+- `db_models.py`
   ORM 表模型定义文件。
 
-- `db_orm.py`  
+- `db_orm.py`
   ORM 数据访问层，负责学生数据的增删改查。
 
-- `db_storage.py`  
+- `db_storage.py`
   早期 SQLite 数据访问代码，作为数据库学习过程的一部分保留。
 
-- `db_init.py`  
+- `db_init.py`
   数据库初始化脚本，用于创建学生表。
 
-- `db_demo.py`  
+- `db_demo.py`
   数据库相关演示代码。
 
 ---
 
 ### 5.3 命令行主线
 
-- `main.py`  
+- `main.py`
   命令行程序入口。
 
-- `cli.py`  
+- `cli.py`
   命令行交互逻辑。
 
-- `cli_service.py`  
+- `cli_service.py`
   命令行业务服务层。
 
-- `manager.py`  
+- `manager.py`
   学生对象管理逻辑。
 
-- `student.py`  
+- `student.py`
   学生实体类。
 
-- `json_storage.py`  
+- `json_storage.py`
   JSON 文件读写逻辑。
 
 ---
 
-### 5.4 测试主线
+### 5.4 大模型主线
 
-- `tests/conftest.py`  
+- `ai_client.py`
+  封装阿里云百炼 DashScope 的 OpenAI 兼容客户端，负责读取 `DASHSCOPE_API_KEY` 并调用模型。
+
+- `prompts.py`
+  集中管理项目中的大模型 Prompt 模板。
+
+- `openai_demo.py`
+  命令行演示脚本，用于单独测试大模型调用是否正常。
+
+---
+
+### 5.5 测试主线
+
+- `tests/conftest.py`
   pytest 公共测试夹具文件，负责创建测试客户端和隔离测试数据库。
 
-- `tests/test_api.py`  
+- `tests/test_api.py`
   学生接口主流程测试，包括新增、查询、修改、删除和业务错误测试。
 
-- `tests/test_student_dependencies.py`  
+- `tests/test_student_dependencies.py`
   依赖链测试，主要验证路径参数校验和学生存在性检查。
 
-- `tests/test_request_validation.py`  
+- `tests/test_request_validation.py`
   请求体验证测试，主要验证缺字段、类型错误、范围错误、字符串长度错误和自定义校验错误。
+
+- `tests/test_ai.py`
+  AI 接口测试文件，使用 Mock 机制避免测试时真实调用大模型。
+
+- `tests/test_prompts.py`
+  Prompt 模板测试文件，验证 Prompt 构建结果是否包含必要项目上下文。
 
 ---
 
@@ -242,13 +305,13 @@ python -m venv .venv
 安装项目依赖：
 
 ```powershell
-pip install fastapi uvicorn sqlmodel pytest httpx
+pip install -r requirements.txt
 ```
 
-如果后续项目中维护了 `requirements.txt`，也可以使用：
+如果没有使用 `requirements.txt`，也可以手动安装主要依赖：
 
 ```powershell
-pip install -r requirements.txt
+pip install fastapi uvicorn sqlmodel pytest httpx openai
 ```
 
 ---
@@ -262,6 +325,8 @@ python db_init.py
 ```
 
 该命令会初始化 SQLite 数据库和学生表。
+
+如果使用 Docker Compose 启动项目，项目启动时也会自动创建数据库目录和数据表。
 
 ---
 
@@ -301,10 +366,12 @@ uvicorn api:app --host 127.0.0.1 --port 8000
 
 含义：
 
-- `api:app`：从 `api.py` 文件中找到 `app` 这个 FastAPI 应用对象
-- `--host 127.0.0.1`：只允许本机访问
-- `--port 8000`：服务运行在 8000 端口
-- 不使用 `--reload`：避免生产环境监听文件变化
+| 部分 | 含义 |
+|---|---|
+| `api:app` | 从 `api.py` 文件中找到 `app` 这个 FastAPI 应用对象 |
+| `--host 127.0.0.1` | 只允许本机访问 |
+| `--port 8000` | 服务运行在 8000 端口 |
+| 不使用 `--reload` | 避免生产环境监听文件变化 |
 
 访问地址：
 
@@ -358,6 +425,8 @@ uvicorn api:app --host 0.0.0.0 --port 8000
 ```
 
 注意：`0.0.0.0` 可能触发 Windows 防火墙提示，因为它允许外部设备尝试访问当前服务。
+
+---
 
 ## 9. 接口文档
 
@@ -416,9 +485,12 @@ http://127.0.0.1:8000/openapi.json
 
 当前已处理的错误类型包括：
 
-- `400`：请求数据不合法
-- `404`：目标资源不存在
-- `422`：请求参数校验失败
+| 状态码 | 含义 |
+|---|---|
+| `400` | 请求数据不合法 |
+| `404` | 目标资源不存在 |
+| `422` | 请求参数校验失败 |
+| `502` | 大模型服务调用失败 |
 
 ---
 
@@ -430,10 +502,10 @@ http://127.0.0.1:8000/openapi.json
 python -m pytest
 ```
 
-当前预期结果：
+当前测试结果：
 
 ```text
-21 passed
+36 passed
 ```
 
 也可以使用简洁模式：
@@ -459,514 +531,96 @@ python -m pytest -q
 - 请求体字段范围错误时返回 422
 - 请求体字符串长度错误时返回 422
 - 自定义字段校验错误时返回 422
+- AI 接口正常响应测试
+- AI 接口异常响应测试
+- Prompt 模板构建测试
+- 测试期间禁止真实调用大模型
 
 ---
 
 ## 12. Docker 容器化运行
 
-本项目已经支持使用 Docker 构建镜像并运行容器。
+本项目支持使用 Docker 和 Docker Compose 在本地启动 FastAPI 后端服务。
 
-Docker 可以将 Python 环境、项目依赖、项目代码和启动命令统一打包，减少不同电脑或服务器环境不一致导致的问题。
+Docker 的作用是把 Python 环境、项目依赖、项目代码和启动命令统一打包，减少不同电脑或服务器环境不一致导致的问题。
 
 ---
 
-### 12.1 Docker 相关文件说明
+### 12.1 Docker 相关文件
 
 项目根目录下包含以下 Docker 相关文件：
 
 | 文件 | 作用 |
 |---|---|
 | `Dockerfile` | 定义如何构建项目镜像 |
-| `.dockerignore` | 定义构建镜像时需要忽略的文件 |
+| `docker-compose.yml` | 定义容器启动配置 |
+| `.dockerignore` | 定义构建镜像时忽略哪些文件 |
+| `.env.example` | 提供环境变量配置示例 |
 
-其中：
-
-- `Dockerfile` 用来告诉 Docker 如何安装依赖、复制代码、启动 FastAPI 服务。
-- `.dockerignore` 用来避免将 `.venv/`、缓存文件、数据库文件、`.env` 等无关或敏感文件复制进镜像。
+`.dockerignore` 中已经排除了 `.venv/`、`.git/`、`.env`、缓存文件和数据库文件，避免把无关文件或敏感配置打包进镜像。
 
 ---
 
-### 12.2 构建 Docker 镜像
+### 12.2 使用 Docker Compose 启动项目
+
+推荐使用 Docker Compose 启动项目。
 
 在项目根目录执行：
 
 ```powershell
-docker build -t student-manager-api:latest .
+docker compose up --build
 ```
 
-命令说明：
+该命令会根据 `Dockerfile` 和 `docker-compose.yml` 构建并启动服务。
 
-| 部分 | 含义 |
-|---|---|
-| `docker build` | 构建 Docker 镜像 |
-| `-t student-manager-api:latest` | 给镜像命名为 `student-manager-api`，标签为 `latest` |
-| `.` | 使用当前目录作为构建上下文 |
-
-构建成功后，可以查看本地镜像：
-
-```powershell
-docker images
-```
-
-如果看到类似下面内容，说明镜像构建成功：
-
-```text
-student-manager-api:latest
-```
-
----
-
-### 12.3 运行 Docker 容器
-
-执行：
-
-```powershell
-docker run -d --name student-manager-api-container -p 8000:8000 student-manager-api:latest
-```
-
-命令说明：
-
-| 部分 | 含义 |
-|---|---|
-| `docker run` | 根据镜像创建并运行容器 |
-| `-d` | 后台运行容器 |
-| `--name student-manager-api-container` | 给容器命名 |
-| `-p 8000:8000` | 将本机 8000 端口映射到容器内部 8000 端口 |
-| `student-manager-api:latest` | 使用该镜像启动容器 |
-
-启动成功后，访问接口文档：
+启动成功后，访问：
 
 ```text
 http://127.0.0.1:8000/docs
 ```
 
----
-
-### 12.4 查看正在运行的容器
+如果需要后台运行，可以使用：
 
 ```powershell
-docker ps
-```
-
-如果看到：
-
-```text
-student-manager-api-container
-0.0.0.0:8000->8000/tcp
-```
-
-说明容器正在运行，并且端口映射成功。
-
----
-
-### 12.5 查看容器日志
-
-```powershell
-docker logs student-manager-api-container
-```
-
-如果看到类似：
-
-```text
-Uvicorn running on http://0.0.0.0:8000
-GET /docs HTTP/1.1 200 OK
-GET /openapi.json HTTP/1.1 200 OK
-```
-
-说明 FastAPI 服务已经在 Docker 容器中正常运行。
-
----
-
-### 12.6 停止并删除容器
-
-停止容器：
-
-```powershell
-docker stop student-manager-api-container
-```
-
-删除容器：
-
-```powershell
-docker rm student-manager-api-container
-```
-
-注意：
-
-```text
-删除容器不会删除镜像。
-```
-
-镜像 `student-manager-api:latest` 仍然保留在本机，可以继续用来重新创建容器。
-
----
-
-### 12.7 Docker 运行流程总结
-
-完整 Docker 运行流程如下：
-
-```text
-Dockerfile
-→ docker build
-→ 镜像 image
-→ docker run
-→ 容器 container
-→ FastAPI 服务启动
-→ 浏览器访问 /docs
-```
-
-常用命令汇总：
-
-```powershell
-docker build -t student-manager-api:latest .
-docker images
-docker run -d --name student-manager-api-container -p 8000:8000 student-manager-api:latest
-docker ps
-docker logs student-manager-api-container
-docker stop student-manager-api-container
-docker rm student-manager-api-container
-```
-
-## 13. Docker 部署前检查与数据持久化
-
-本项目在 Docker 容器中运行时，支持通过环境变量控制运行配置，并支持将本机 `data` 目录挂载到容器内部，实现 SQLite 数据库文件持久化。
-
----
-
-### 13.1 环境变量配置
-
-项目通过 `config.py` 读取环境变量：
-
-| 环境变量 | 默认值 | 作用 |
-|---|---|---|
-| `STUDENT_DB_PATH` | `data/students.db` | 设置学生数据库文件路径 |
-| `LOG_LEVEL` | `INFO` | 设置日志输出等级 |
-
-示例：
-
-```powershell
-docker run -d --name student-manager-api-container -p 8000:8000 -e LOG_LEVEL=INFO student-manager-api:latest
-```
-
-其中：
-
-```text
--e LOG_LEVEL=INFO
-```
-
-表示向容器传入日志等级配置。
-
----
-
-### 13.2 容器内数据库自动初始化
-
-项目启动时会自动创建数据库目录和数据表。
-
-启动流程包括：
-
-```text
-FastAPI 启动
-→ 读取配置
-→ 创建 data 目录
-→ 创建 students 表
-→ 启动接口服务
-```
-
-这样可以避免 Docker 容器中出现：
-
-```text
-sqlite3.OperationalError: no such table: students
-```
-
-即使容器中没有提前准备好的 `students.db` 文件，项目也可以在启动时自动初始化数据库结构。
-
----
-
-### 13.3 容器数据丢失问题
-
-默认情况下，如果数据库文件只保存在容器内部：
-
-```text
-/app/data/students.db
-```
-
-那么删除容器后，容器内部的数据也会丢失。
-
-区别如下：
-
-| 操作 | 数据是否保留 |
-|---|---|
-| `docker stop 容器名` | 保留 |
-| `docker start 容器名` | 保留 |
-| `docker rm 容器名` | 容器内部数据丢失 |
-
-因此，重要数据不应该只保存在容器内部。
-
----
-
-### 13.4 挂载 data 目录实现数据持久化
-
-推荐在运行容器时，将本机项目目录下的 `data` 目录挂载到容器内部：
-
-```powershell
-docker run -d --name data-persist-test -p 8000:8000 -v "${PWD}\data:/app/data" student-manager-api:latest
-```
-
-其中：
-
-| 部分 | 含义 |
-|---|---|
-| `-v` | 挂载目录 |
-| `${PWD}\data` | 本机当前项目下的 `data` 目录 |
-| `/app/data` | 容器内部的 `data` 目录 |
-
-挂载后：
-
-```text
-容器读写 /app/data/students.db
-实际就是读写本机 data/students.db
-```
-
-这样即使删除容器，数据库文件仍然保留在本机项目的 `data` 目录中。
-
----
-
-### 13.5 更安全的本地端口绑定
-
-本地开发和部署前检查时，推荐使用：
-
-```powershell
--p 127.0.0.1:8000:8000
-```
-
-完整示例：
-
-```powershell
-docker run -d --name deploy-check -p 127.0.0.1:8000:8000 -e LOG_LEVEL=INFO -v "${PWD}\data:/app/data" student-manager-api:latest
-```
-
-含义：
-
-```text
-只允许本机通过 127.0.0.1:8000 访问服务
-不主动暴露给局域网其他设备
-```
-
-访问地址：
-
-```text
-http://127.0.0.1:8000/docs
+docker compose up -d --build
 ```
 
 ---
 
-### 13.6 Docker 部署前检查流程
+### 12.3 查看服务状态和日志
 
-部署前可以按以下流程检查项目是否正常：
-
-```powershell
-python -m pytest
-docker build -t student-manager-api:latest .
-docker images
-docker rm -f deploy-check
-docker run -d --name deploy-check -p 127.0.0.1:8000:8000 -e LOG_LEVEL=INFO -v "${PWD}\data:/app/data" student-manager-api:latest
-docker ps
-docker logs deploy-check
-```
-
-然后浏览器访问：
-
-```text
-http://127.0.0.1:8000/docs
-```
-
-至少检查：
-
-```text
-GET /students/
-POST /students/
-```
-
-检查完成后，停止并删除检查容器：
-
-```powershell
-docker stop deploy-check
-docker rm deploy-check
-```
-
----
-
-### 13.7 Docker 运行配置总结
-
-完整链路如下：
-
-```text
-读取环境变量
-→ 自动初始化数据库
-→ 挂载 data 目录
-→ 启动 FastAPI 容器
-→ 访问 /docs
-→ 验证接口
-→ 停止并删除检查容器
-```
-
-推荐的本地部署前检查命令：
-
-```powershell
-docker run -d --name deploy-check -p 127.0.0.1:8000:8000 -e LOG_LEVEL=INFO -v "${PWD}\data:/app/data" student-manager-api:latest
-```
-
-## 14. Docker Compose 启动项目
-
-本项目支持使用 Docker Compose 管理容器启动配置。
-
-Docker Compose 可以把原本较长的 `docker run` 命令整理到 `docker-compose.yml` 文件中，统一管理镜像构建、容器名称、端口映射、环境变量和数据挂载配置。
-
----
-
-### 14.1 Docker Compose 配置文件
-
-项目根目录下包含：
-
-```text
-docker-compose.yml
-```
-
-该文件用于定义 FastAPI 服务的容器运行方式。
-
-当前配置包含：
-
-| 配置项 | 作用 |
-|---|---|
-| `build` | 根据当前目录下的 `Dockerfile` 构建镜像 |
-| `image` | 指定镜像名称 |
-| `container_name` | 指定容器名称 |
-| `ports` | 设置端口映射 |
-| `environment` | 设置环境变量 |
-| `volumes` | 挂载本机 `data` 目录到容器内部 |
-
----
-
-### 14.2 启动服务
-
-在项目根目录执行：
-
-```powershell
-docker compose up -d
-```
-
-含义：
-
-| 部分 | 含义 |
-|---|---|
-| `docker compose` | 使用 Docker Compose |
-| `up` | 根据 `docker-compose.yml` 创建并启动服务 |
-| `-d` | 后台运行容器 |
-
-启动成功后，可以访问：
-
-```text
-http://127.0.0.1:8000/docs
-```
-
----
-
-### 14.3 查看服务状态
+查看服务状态：
 
 ```powershell
 docker compose ps
 ```
 
-如果看到类似：
-
-```text
-student-manager-api-compose
-127.0.0.1:8000->8000/tcp
-```
-
-说明容器已经正常运行，并且本机端口已经映射到容器端口。
-
----
-
-### 14.4 查看服务日志
+查看服务日志：
 
 ```powershell
 docker compose logs app
 ```
 
-正常情况下可以看到类似：
+如果日志中看到类似内容，说明服务启动正常：
 
 ```text
-Student Manager API starting...
+Application startup complete.
 Uvicorn running on http://0.0.0.0:8000
 ```
 
-这说明 FastAPI 服务已经在容器内启动成功。
-
 ---
 
-### 14.5 验证环境变量
+### 12.4 停止 Docker 服务
 
-可以进入容器查看环境变量：
-
-```powershell
-docker compose exec app printenv LOG_LEVEL
-docker compose exec app printenv STUDENT_DB_PATH
-```
-
-预期输出：
+如果当前终端正在前台运行 Docker Compose，可以按：
 
 ```text
-INFO
-data/students.db
+Ctrl + C
 ```
 
-也可以验证 Python 项目是否真正读取到了配置：
+停止服务。
 
-```powershell
-docker compose exec app python -c "from config import settings; print(settings.log_level); print(settings.database_path)"
-```
-
-预期输出：
-
-```text
-INFO
-data/students.db
-```
-
----
-
-### 14.6 验证 data 目录挂载
-
-执行：
-
-```powershell
-docker compose exec app ls -l /app/data
-```
-
-如果能看到：
-
-```text
-students.db
-```
-
-说明本机 `data` 目录已经成功挂载到容器内部的 `/app/data`。
-
-这意味着容器读写：
-
-```text
-/app/data/students.db
-```
-
-实际就是读写本机项目目录下的：
-
-```text
-data/students.db
-```
-
----
-
-### 14.7 停止并删除 Compose 服务
+如果是后台运行，可以执行：
 
 ```powershell
 docker compose down
@@ -974,187 +628,62 @@ docker compose down
 
 该命令会停止并删除由 Docker Compose 创建的容器和默认网络。
 
-注意：
+---
+
+### 12.5 数据持久化说明
+
+项目通过 `docker-compose.yml` 将本机 `data` 目录挂载到容器内部：
 
 ```text
-docker compose down 不会删除本机 data/students.db
+./data:/app/data
 ```
 
-因为数据库文件保存在本机 `data` 目录中，不只存在于容器内部。
+这表示：
+
+```text
+容器内部读写 /app/data
+实际对应本机项目目录下的 data 目录
+```
+
+因此，即使容器被删除，本机 `data` 目录中的数据库文件仍然可以保留。
 
 ---
 
-### 14.8 Docker Compose 常用命令汇总
+## 13. 环境变量与安全配置
+
+本项目通过环境变量管理配置。
+
+项目中提供了：
+
+```text
+.env.example
+```
+
+作为环境变量示例文件。
+
+首次本地运行时，可以复制一份 `.env`：
 
 ```powershell
-docker compose config
-docker compose up -d
-docker compose ps
-docker compose logs app
-docker compose exec app printenv LOG_LEVEL
-docker compose exec app printenv STUDENT_DB_PATH
-docker compose exec app ls -l /app/data
-docker compose down
+Copy-Item .env.example .env
 ```
 
-完整运行流程：
+`.env.example` 可以提交到 GitHub，用于说明项目需要哪些环境变量。
 
-```text
-编写 docker-compose.yml
- docker compose config 检查配置
- docker compose up -d 启动服务
- docker compose ps 查看容器状态
- docker compose logs app 查看日志
- 浏览器访问 /docs
- 验证接口
- docker compose down 停止并清理容器
-```
-
-## 14.9 Docker 本地运行说明
-
-本项目支持使用 Docker 和 Docker Compose 在本地启动 FastAPI 后端服务。
-
-### 1. 准备环境变量文件
-
-项目中提供了 `.env.example` 作为环境变量示例文件。
-
-首次运行前，可以复制一份 `.env`：
-
-```bash
-copy .env.example .env
-```
-
-如果是在 macOS / Linux 环境中，可以使用：
-
-```bash
-cp .env.example .env
-```
-
-`.env.example` 可以提交到 GitHub，用来说明项目需要哪些环境变量。
-
-`.env` 通常包含真实 API Key、数据库路径等本地私密配置，不应该提交到 GitHub。
-
-### 2. 使用 Docker Compose 启动项目
-
-在项目根目录执行：
-
-```bash
-docker compose up --build
-```
-
-该命令会根据 `Dockerfile` 和 `docker-compose.yml` 构建并启动项目。
-
-启动成功后，可以在浏览器访问：
-
-```text
-http://127.0.0.1:8000/docs
-```
-
-该页面是 FastAPI 提供的 Swagger UI 页面，可以用来查看和测试接口。
-
-### 3. 停止 Docker 服务
-
-在终端按下 `Ctrl + C` 可以停止当前运行的服务。
-
-如果需要关闭并清理容器，可以执行：
-
-```bash
-docker compose down
-```
-
-### 4. 本地非 Docker 方式启动
-
-如果不使用 Docker，也可以在虚拟环境中直接启动：
-
-```bash
-uvicorn api:app --reload
-```
-
-启动后同样访问：
-
-```text
-http://127.0.0.1:8000/docs
-```
-
-### 5. 运行自动化测试
-
-项目使用 `pytest` 进行自动化测试。
-
-运行全部测试：
-
-```bash
-python -m pytest
-```
-
-如果测试全部通过，说明当前学生管理接口、AI 接口、请求校验和错误响应逻辑基本正常。
-
-## 基础安全与配置说明
-
-### 1. 不要提交真实 `.env`
-
-`.env` 文件通常保存本地真实配置，例如 API Key、数据库路径等。
-
-这些内容不应该提交到 GitHub。
-
-项目中应该只提交 `.env.example`，用于说明需要配置哪些环境变量。
-
-### 2. 不要把 API Key 写死在代码中
-
-调用大模型 API 时，不应该把真实 Key 直接写进 Python 文件。
-
-正确做法是：
-
-```text
-代码从环境变量读取配置
-真实配置写在本地 .env 中
-.env 不提交到远程仓库
-```
-
-这样可以避免密钥泄露。
-
-### 3. 数据库文件的提交策略
-
-本项目当前使用 SQLite 作为本地数据库。
-
-如果数据库文件只是本地开发数据，通常不应该提交真实业务数据。
-
-如果需要提供演示数据，应该保证其中不包含真实隐私信息。
-
-### 4. 当前部署认知边界
-
-当前项目完成的是本地 Docker 化运行和基础部署认知。
-
-本阶段暂时不深入复杂生产部署，例如：
-
-- Kubernetes
-- 复杂容器编排
-- 复杂权限系统
-- 生产级数据库迁移
-- 多环境 CI/CD
-
-后续如果项目继续升级，可以再逐步补充这些内容。
-
-## 15. 大模型 API Key 安全规则
-
-本项目在阶段 6 开始接入大模型 API。
-
-当前实际使用的平台是：
-
-```text
-阿里云百炼 DashScope / Model Studio
-```
-
-当前使用的环境变量名称是：
-
-```text
-DASHSCOPE_API_KEY
-```
-
-项目通过 OpenAI Python SDK 的兼容模式调用百炼模型服务。
+`.env` 通常保存本地真实配置，例如 API Key、数据库路径等，不应该提交到 GitHub。
 
 ---
 
-### 15.1 安全原则
+### 13.1 当前环境变量
+
+| 环境变量 | 作用 |
+|---|---|
+| `STUDENT_DB_PATH` | 设置学生数据库文件路径 |
+| `LOG_LEVEL` | 设置日志输出等级 |
+| `DASHSCOPE_API_KEY` | 阿里云百炼 DashScope API Key |
+
+---
+
+### 13.2 API Key 安全规则
 
 API Key 属于敏感信息，不能直接写入代码、README、测试文件或提交到 GitHub。
 
@@ -1170,9 +699,11 @@ api_key = "sk-xxx"
 api_key = os.getenv("DASHSCOPE_API_KEY")
 ```
 
+本项目当前已经采用环境变量读取方式。
+
 ---
 
-### 15.2 Windows PowerShell 配置方式
+### 13.3 Windows PowerShell 配置百炼 API Key
 
 在 Windows PowerShell 中，可以使用下面命令配置用户级环境变量：
 
@@ -1180,192 +711,72 @@ api_key = os.getenv("DASHSCOPE_API_KEY")
 setx DASHSCOPE_API_KEY "你的真实百炼API_KEY"
 ```
 
-配置完成后，需要重新打开 VS Code 或重新打开终端，让新环境变量生效。
+配置完成后，需要重新打开 VS Code 或重新打开终端，让新的环境变量生效。
 
----
-
-### 15.3 检查环境变量是否生效
-
-不要直接打印真实 API Key。
-
-可以使用下面命令安全检查是否已经配置：
+安全检查是否配置成功：
 
 ```powershell
 python -c "import os; print('DASHSCOPE_API_KEY 已配置' if os.getenv('DASHSCOPE_API_KEY') else 'DASHSCOPE_API_KEY 未配置')"
 ```
 
-预期输出：
+注意：不要直接打印真实 API Key。
+
+---
+
+### 13.4 不应该提交的内容
+
+以下内容不应该提交到 GitHub：
 
 ```text
-DASHSCOPE_API_KEY 已配置
+.env
+.venv/
+__pycache__/
+.pytest_cache/
+data/*.db
+.claude/
+.vscode/
+```
+
+本项目已经在 `.gitignore` 和 `.dockerignore` 中排除了这些内容。
+
+---
+
+## 14. 大模型接口能力
+
+本项目已经接入阿里云百炼 DashScope，并通过 OpenAI 兼容接口进行调用。
+
+这里的 OpenAI 兼容接口，意思是：
+
+```text
+当前实际使用的是阿里云百炼模型，
+但代码调用方式兼容 OpenAI Python SDK 的接口格式。
 ```
 
 ---
 
-### 15.4 本项目的大模型 Demo
-
-项目根目录下包含：
-
-```text
-openai_demo.py
-```
-
-该文件用于验证 Python 项目是否可以通过 OpenAI 兼容接口调用阿里云百炼模型。
-
-运行方式：
-
-```powershell
-python openai_demo.py
-```
-
-如果配置正确，会看到类似输出：
-
-```text
-1. 程序开始运行
-2. DASHSCOPE_API_KEY 已读取
-3. 正在创建百炼 OpenAI 兼容 client
-4. 正在发送请求，请等待...
-5. 请求成功，模型返回：
-...
-```
-
----
-
-### 15.5 注意事项
-
-- 不要把真实 API Key 发到聊天窗口。
-- 不要把真实 API Key 写进代码。
-- 不要把真实 API Key 写进 README。
-- 不要把真实 API Key 提交到 GitHub。
-- 如果使用 `.env` 文件保存本地配置，必须确保 `.env` 已经被 `.gitignore` 忽略。
-- `.env.example` 只能写示例变量名，不能写真实 Key。
-
-### 15.6 AI 接口测试与 Mock 机制
-
-本项目为 `/ai/reply` 接口补充了自动化测试，并通过 Mock 机制避免测试时真实调用阿里云百炼大模型。
-
-测试文件：
-
-```text
-tests/test_ai.py
-```
-
-当前 AI 接口测试覆盖内容：
-
-- `/ai/reply` 正常返回时，接口返回 `200`
-- `generate_ai_reply()` 抛出 `RuntimeError` 时，接口返回 `502`
-- `generate_ai_reply()` 抛出 `ValueError` 时，接口返回 `400`
-- `prompt` 为空字符串时，接口返回 `422`
-- `prompt` 超过最大长度时，接口返回 `422`
-- 测试期间禁止真实创建百炼客户端，避免误调用真实 API
-
-测试中使用了 `monkeypatch` 临时替换：
-
-```text
-routers.ai.generate_ai_reply
-```
-
-这样可以保证测试 `/ai/reply` 路由逻辑时，不会真实请求百炼模型服务。
-
-同时，测试中还使用了 `pytest.fixture(autouse=True)` 自动阻止真实创建百炼客户端：
-
-```text
-ai_client.get_bailian_client
-```
-
-如果测试期间误调用真实百炼客户端创建函数，测试会主动失败，从而防止消耗 API 额度。
-
-运行测试：
-
-```powershell
-python -m pytest
-```
-
-当前预期测试结果：
-
-```text
-27 passed
-```
-
-### 15.7 Prompt 工程基础
-
-本项目在 AI 接口中加入了 Prompt 工程基础设计。
-
-Prompt 是发送给大模型的指令文本。  
-在本项目中，用户原始输入不会直接发送给大模型，而是会先通过 `prompts.py` 进行包装，生成包含项目背景、角色设定、回答要求和用户问题的完整 Prompt。
-
-当前新增文件：
-
-| 文件 | 作用 |
-|---|---|
-| `prompts.py` | 集中管理项目中的大模型 Prompt 模板 |
-| `tests/test_prompts.py` | 测试 Prompt 模板是否包含必要内容 |
-
-当前 Prompt 构建函数：
-
-`build_student_manager_prompt(user_prompt: str) -> str`
-
-该函数的作用是：
-
-- 接收用户原始问题
-- 加入学生信息管理系统项目背景
-- 加入 Python 后端开发学习助手角色
-- 加入中文回答、结合项目、不编造不存在功能等约束
-- 返回最终发送给大模型的完整 Prompt
-
-当前调用链路：
-
-- `openai_demo.py` 会调用 `build_student_manager_prompt()` 构建 Prompt
-- `/ai/reply` 接口也会调用 `build_student_manager_prompt()` 构建 Prompt
-- `ai_client.py` 只负责调用百炼模型，不负责拼接 Prompt
-
-这样拆分后，项目结构更清晰：
-
-- `prompts.py` 负责提示词模板
-- `ai_client.py` 负责模型调用
-- `routers/ai.py` 负责接口请求和响应
-- `tests/test_prompts.py` 负责 Prompt 模板测试
-
-当前 Prompt 测试覆盖内容：
-
-- 最终 Prompt 必须包含用户原始问题
-- 最终 Prompt 必须包含学生信息管理系统项目背景
-- 最终 Prompt 必须包含 Python 后端开发学习助手角色
-- 最终 Prompt 必须包含 FastAPI、阿里云百炼大模型 API 等当前项目上下文
-- 最终 Prompt 首尾不能有多余空白
-
-运行测试：
-
-`python -m pytest`
-
-当前预期测试结果：
-
-`30 passed`
-
-## 16. AI 接口：百炼大模型回复接口
-
-本项目已经接入阿里云百炼平台的大模型能力，并通过 OpenAI 兼容接口进行调用。
-
-这里的 OpenAI 兼容接口，意思是：虽然当前实际使用的是阿里云百炼模型，但代码调用方式兼容 OpenAI Python SDK 的接口格式。
-
-当前 AI 调用逻辑已经从临时演示脚本中拆分出来，封装到了 `ai_client.py` 中，并通过 FastAPI 路由暴露为正式接口。
-
-### 16.1 相关文件
+### 14.1 相关文件
 
 | 文件 | 作用 |
 |---|---|
 | `ai_client.py` | 封装百炼 OpenAI 兼容客户端，负责读取 `DASHSCOPE_API_KEY` 并调用模型 |
-| `openai_demo.py` | 命令行演示脚本，用于单独测试大模型调用是否正常 |
-| `routers/ai.py` | AI 接口路由文件，提供 `/ai/reply` 接口 |
-| `tests/test_ai.py` | AI 接口测试文件，使用 `monkeypatch` 避免测试时真实调用大模型 |
+| `prompts.py` | 集中管理大模型 Prompt 模板 |
+| `routers/ai.py` | AI 接口路由文件 |
+| `openai_demo.py` | 命令行演示脚本，用于单独测试大模型调用 |
+| `tests/test_ai.py` | AI 接口测试文件 |
+| `tests/test_prompts.py` | Prompt 模板测试文件 |
 
-### 16.2 AI 接口说明
+---
 
-当前新增接口：
+### 14.2 当前 AI 接口
 
-```text
-POST /ai/reply
-```
+| 方法 | 路径 | 说明 |
+|---|---|---|
+| `POST` | `/ai/reply` | 调用百炼模型生成回复 |
+| `POST` | `/ai/students/{student_id}/advice` | 根据学生信息生成学习建议 |
+
+---
+
+### 14.3 `/ai/reply` 示例
 
 请求体示例：
 
@@ -1383,35 +794,71 @@ POST /ai/reply
 }
 ```
 
-### 16.3 环境变量要求
+---
 
-运行 AI 接口前，需要配置百炼 API Key：
+### 14.4 `/ai/students/{student_id}/advice` 示例
 
-```powershell
-setx DASHSCOPE_API_KEY "你的真实百炼API_KEY"
+请求路径示例：
+
+```text
+POST /ai/students/001/advice
 ```
 
-配置完成后，需要重新打开终端，使环境变量生效。
+接口作用：
 
-检查是否配置成功：
-
-```powershell
-python -c "import os; print('DASHSCOPE_API_KEY 已配置' if os.getenv('DASHSCOPE_API_KEY') else 'DASHSCOPE_API_KEY 未配置')"
+```text
+根据指定学生的信息，调用大模型生成学习建议。
 ```
 
-注意：
+注意：该接口需要提前配置 `DASHSCOPE_API_KEY`，否则无法真实调用百炼模型服务。
 
-- 不要把真实 API Key 写进代码。
-- 不要把真实 API Key 写进 `README.md`。
-- 不
+---
 
+### 14.5 Prompt 工程基础
 
-## 17. 当前项目阶段
+项目中的用户原始输入不会直接发送给大模型，而是会先通过 `prompts.py` 进行包装。
 
-当前项目已经完成阶段 5 的主要部署基础内容。
+当前 Prompt 构建函数：
 
-已完成内容包括：
+```python
+build_student_manager_prompt(user_prompt: str) -> str
+```
 
+它的作用是：
+
+- 接收用户原始问题
+- 加入学生信息管理系统项目背景
+- 加入 Python 后端开发学习助手角色
+- 加入中文回答、结合项目、不编造不存在功能等约束
+- 返回最终发送给大模型的完整 Prompt
+
+这样可以让 AI 回复更加稳定、贴合项目上下文。
+
+---
+
+### 14.6 AI 接口测试与 Mock 机制
+
+本项目为 AI 接口补充了自动化测试，并通过 Mock 机制避免测试时真实调用阿里云百炼大模型。
+
+测试重点包括：
+
+- `/ai/reply` 正常返回时，接口返回 `200`
+- 大模型调用异常时，接口返回对应错误响应
+- `prompt` 为空字符串时，接口返回 `422`
+- `prompt` 超过最大长度时，接口返回 `422`
+- 测试期间禁止真实创建百炼客户端，避免误调用真实 API
+
+这样可以保证测试稳定运行，同时避免消耗真实 API 额度。
+
+---
+
+## 15. 当前项目阶段
+
+当前项目已经完成学生信息管理系统的主要工程化收尾内容。
+
+已完成能力包括：
+
+- 命令行版本
 - FastAPI 后端接口版本
 - APIRouter 路由拆分
 - Depends 依赖校验
@@ -1420,29 +867,22 @@ python -c "import os; print('DASHSCOPE_API_KEY 已配置' if os.getenv('DASHSCOP
 - Pydantic 请求体和响应体模型
 - 统一错误响应结构
 - 全局异常处理器
-- 测试数据库隔离
 - 自动化接口测试
-- `/docs` 接口文档优化
-- `/openapi.json` 接口总说明书优化
-- Git / GitHub 版本管理
+- `/docs` Swagger UI 接口文档
+- `/openapi.json` OpenAPI 接口总说明书
+- Git / GitHub 基础版本管理
 - `.gitignore` 与 `.dockerignore` 安全基线
 - `.env.example` 配置模板
-- 环境变量配置读取
-- 日志配置基础接入
 - Dockerfile 容器化构建
-- Docker 容器运行验证
-- Docker 数据持久化验证
 - Docker Compose 启动配置
-- Docker Compose 环境变量和挂载验证
-- 部署前本地启动验证
-- 部署前 Docker Compose 启动验证
+- 阿里云百炼 DashScope 大模型接口接入
+- Prompt 模板拆分
+- AI 接口 Mock 测试
 
-阶段 5 的核心目标是：让项目从“能在本地运行的 FastAPI 项目”，推进到“具备基础部署准备能力的后端工程项目”。
-
-当前推荐运行方式：
+当前推荐启动方式：
 
 ```powershell
-docker compose up -d
+docker compose up --build
 ```
 
 当前推荐接口访问地址：
@@ -1451,9 +891,13 @@ docker compose up -d
 http://127.0.0.1:8000/docs
 ```
 
-## 18. 学习说明
+---
 
-本项目是一个学习型工程项目，目标不是一次性完成复杂系统，而是通过持续迭代逐步掌握：
+## 16. 学习说明
+
+本项目是一个学习型工程项目。
+
+项目目标不是一次性完成复杂系统，而是通过持续迭代逐步掌握：
 
 - Python 项目模块化
 - 后端接口设计
@@ -1462,6 +906,8 @@ http://127.0.0.1:8000/docs
 - 接口文档维护
 - 自动化测试
 - Git 版本管理
-- 工程化项目收口
+- Docker 基础部署
+- 大模型 API 接入
+- Prompt 工程基础
 
 当前项目已经从最初的命令行版本，逐步演进为一个具备基础工程结构的 FastAPI 后端项目。

@@ -1,5 +1,6 @@
 from pydantic import BaseModel, Field, field_validator, ConfigDict
 
+
 ##学生响应体模型：写在路由里面
 class StudentResponse(BaseModel):
 
@@ -22,6 +23,30 @@ class StudentResponse(BaseModel):
     age:int=Field(description="学生年龄")
     major:str=Field(description="学生专业")
     score:int=Field(description="学生成绩")
+
+
+
+
+##模型请求体模型：
+class AIReplyRequest(BaseModel):
+    prompt:str = Field(
+        min_length=1,
+        max_length=500,
+        description="用户输入给大模型的问题或指令",
+        examples=["请用一句话介绍 FastAPI。"],
+    )
+
+##模型响应体模型：
+class AIReplyResponse(BaseModel):
+    reply: str = Field(
+        description="大模型返回的回复内容"
+    )
+
+##学生建议响应模型：
+class StudentAdviceResponse(BaseModel):
+    advice: str = Field(description="根据学生信息生成的学习建议")
+
+
 
 
 ##添加学生请求体模型：
