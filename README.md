@@ -1010,6 +1010,130 @@ docker compose down
  docker compose down 停止并清理容器
 ```
 
+## 14.9 Docker 本地运行说明
+
+本项目支持使用 Docker 和 Docker Compose 在本地启动 FastAPI 后端服务。
+
+### 1. 准备环境变量文件
+
+项目中提供了 `.env.example` 作为环境变量示例文件。
+
+首次运行前，可以复制一份 `.env`：
+
+```bash
+copy .env.example .env
+```
+
+如果是在 macOS / Linux 环境中，可以使用：
+
+```bash
+cp .env.example .env
+```
+
+`.env.example` 可以提交到 GitHub，用来说明项目需要哪些环境变量。
+
+`.env` 通常包含真实 API Key、数据库路径等本地私密配置，不应该提交到 GitHub。
+
+### 2. 使用 Docker Compose 启动项目
+
+在项目根目录执行：
+
+```bash
+docker compose up --build
+```
+
+该命令会根据 `Dockerfile` 和 `docker-compose.yml` 构建并启动项目。
+
+启动成功后，可以在浏览器访问：
+
+```text
+http://127.0.0.1:8000/docs
+```
+
+该页面是 FastAPI 提供的 Swagger UI 页面，可以用来查看和测试接口。
+
+### 3. 停止 Docker 服务
+
+在终端按下 `Ctrl + C` 可以停止当前运行的服务。
+
+如果需要关闭并清理容器，可以执行：
+
+```bash
+docker compose down
+```
+
+### 4. 本地非 Docker 方式启动
+
+如果不使用 Docker，也可以在虚拟环境中直接启动：
+
+```bash
+uvicorn api:app --reload
+```
+
+启动后同样访问：
+
+```text
+http://127.0.0.1:8000/docs
+```
+
+### 5. 运行自动化测试
+
+项目使用 `pytest` 进行自动化测试。
+
+运行全部测试：
+
+```bash
+python -m pytest
+```
+
+如果测试全部通过，说明当前学生管理接口、AI 接口、请求校验和错误响应逻辑基本正常。
+
+## 基础安全与配置说明
+
+### 1. 不要提交真实 `.env`
+
+`.env` 文件通常保存本地真实配置，例如 API Key、数据库路径等。
+
+这些内容不应该提交到 GitHub。
+
+项目中应该只提交 `.env.example`，用于说明需要配置哪些环境变量。
+
+### 2. 不要把 API Key 写死在代码中
+
+调用大模型 API 时，不应该把真实 Key 直接写进 Python 文件。
+
+正确做法是：
+
+```text
+代码从环境变量读取配置
+真实配置写在本地 .env 中
+.env 不提交到远程仓库
+```
+
+这样可以避免密钥泄露。
+
+### 3. 数据库文件的提交策略
+
+本项目当前使用 SQLite 作为本地数据库。
+
+如果数据库文件只是本地开发数据，通常不应该提交真实业务数据。
+
+如果需要提供演示数据，应该保证其中不包含真实隐私信息。
+
+### 4. 当前部署认知边界
+
+当前项目完成的是本地 Docker 化运行和基础部署认知。
+
+本阶段暂时不深入复杂生产部署，例如：
+
+- Kubernetes
+- 复杂容器编排
+- 复杂权限系统
+- 生产级数据库迁移
+- 多环境 CI/CD
+
+后续如果项目继续升级，可以再逐步补充这些内容。
+
 ## 15. 大模型 API Key 安全规则
 
 本项目在阶段 6 开始接入大模型 API。
